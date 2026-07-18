@@ -63,7 +63,7 @@ function gridIcon(parent, spec) {
 }
 
 function fxWindow(opts) {
-  return S.createWindow({
+  var win = S.createWindow({
     kind: opts.kind || 'folder',
     title: opts.title,
     x: opts.x, y: opts.y, w: opts.w, h: opts.h,
@@ -72,6 +72,13 @@ function fxWindow(opts) {
     sysIcon: opts.sysIcon,
     content: opts.content
   });
+  // R5 sizes the tab to its title; refs measure title width + 73. Local font
+  // widths differ by a px or two, so fixtures pin the measured tab width.
+  if (opts.tabW) {
+    var tab = win.node.querySelector('.tab');
+    if (tab) tab.style.width = opts.tabW + 'px';
+  }
+  return win;
 }
 
 function beosDeskbar(clock) {
@@ -80,6 +87,9 @@ function beosDeskbar(clock) {
   var logo = el('div', 'db-logo', db);
   el('img', null, logo).src = 'icons/beos/be-logo.png';
   var tray = el('div', 'db-tray', db);
+  var mail = el('img', null, tray);   // tray mailbox, present in every ref
+  mail.src = 'icons/beos/db-mail.png';
+  mail.style.cssText = 'position:absolute;left:6px;top:26px';
   el('span', 'db-clock', tray).textContent = clock;
   var apps = el('div', 'db-apps', db);
   var t = el('div', 'db-app', apps);
@@ -89,7 +99,7 @@ function beosDeskbar(clock) {
 }
 
 function beosDesktopIcons() {
-  icon({ icon: 'trash', label: 'Trash', x: 18, y: 14, w: 64 });
+  icon({ icon: 'trash', label: 'Trash', x: 4, y: 20, w: 64 });
   icon({ icon: 'disk', label: 'BeOS 5 Pro Edition', x: 352, y: 14, w: 90 });
   icon({ icon: 'folder', label: 'Poems', x: 238, y: 225, w: 64 });
 }
@@ -129,19 +139,19 @@ function beosMenubar(names) {
 }
 
 var BEOS_DESKTOP_MENU = [
-  { label: 'Desktop', header: true, icon: 'menu-desktop', sub: true },
+  { label: '&Desktop', header: true, icon: 'menu-desktop', sub: true },
   { sep: true },
-  { label: 'New Folder', accel: 'ALT N' },
+  { label: '&New Folder', accel: 'ALT N' },
   { sep: true },
-  { label: 'Icon View', checked: true },
-  { label: 'Mini Icon View' },
+  { label: '&Icon View', checked: true },
+  { label: '&Mini Icon View' },
   { sep: true },
-  { label: 'Clean Up', accel: 'ALT K' },
-  { label: 'Select All', accel: 'ALT A' },
+  { label: '&Clean Up', accel: 'ALT K' },
+  { label: 'Select &All', accel: 'ALT A' },
   { sep: true },
-  { label: 'Mount', sub: true },
+  { label: 'M&ount', sub: true },
   { sep: true },
-  { label: 'Add-Ons', sub: true }
+  { label: 'Add-On&s', sub: true }
 ];
 
 // ---- OS/2 content builders ----------------------------------------------
@@ -220,13 +230,13 @@ FIXTURES.beos = {
     beosDesktopIcons();
     beosDeskbar('1:42 PM');
     fxWindow({
-      kind: 'folder', title: 'Poems', x: 80, y: 28, w: 340, h: 222,
+      kind: 'folder', title: 'Poems', x: 80, y: 26, w: 341, h: 197, tabW: 111,
       menubar: beosMenubar(['File', 'Window']),
       content: beosFolderContent(
-        [{ icon: 'folder', label: 'Demos', x: 258, y: 96, w: 70 }],
+        [{ icon: 'folder-win', label: 'Demos', x: 260, y: 105, w: 32 }],
         '1 item')
     });
-    cursor(320, 398);
+    cursor(321, 401);
   },
 
   '03-nested': function () {
@@ -234,17 +244,17 @@ FIXTURES.beos = {
     beosDesktopIcons();
     beosDeskbar('1:44 PM');
     fxWindow({
-      kind: 'folder', title: 'Poems', x: 80, y: 28, w: 340, h: 222,
+      kind: 'folder', title: 'Poems', x: 80, y: 26, w: 341, h: 197, tabW: 111,
       active: false,
       menubar: beosMenubar(['File', 'Window']),
       content: beosFolderContent([], '1 item')
     });
     fxWindow({
-      kind: 'folder', title: 'Demos', x: 97, y: 45, w: 340, h: 230,
+      kind: 'folder', title: 'Demos', x: 97, y: 43, w: 341, h: 197, tabW: 111,
       menubar: beosMenubar(['File', 'Window']),
       content: beosFolderContent([], 'no items')
     });
-    cursor(320, 398);
+    cursor(321, 401);
   },
 
   '04-document': function () {
@@ -253,11 +263,13 @@ FIXTURES.beos = {
     var stEntry = document.querySelector('#deskbar .db-apps');
     if (stEntry) {
       var t = el('div', 'db-app', stEntry);
-      el('img', null, t).src = 'icons/beos/doc.png';
+      var si = el('img', null, t);
+      si.src = 'icons/beos/styled-edit.png';
+      si.style.margin = '1px 0 0 4px';   // ref places this entry 4px right
       el('span', null, t).textContent = 'StyledEdit';
     }
     fxWindow({
-      kind: 'doc', title: 'Untitled 1', x: 2, y: 4, w: 510, h: 424,
+      kind: 'doc', title: 'Untitled 1', x: 2, y: 2, w: 511, h: 367, tabW: 126,
       menubar: beosMenubar(['File', 'Edit', 'Font', 'Document']),
       content: function (body) {
         body.classList.add('editor-body');
@@ -288,8 +300,8 @@ FIXTURES.beos = {
     clearDesktop();
     beosDesktopIcons();
     beosDeskbar('1:53 PM');
-    S.showMenu(BEOS_DESKTOP_MENU, 422, 244);
-    cursor(429, 247);
+    S.showMenu(BEOS_DESKTOP_MENU, 422, 240);
+    cursor(422, 240);
   },
 
   '06-dialog': function () {
@@ -297,7 +309,7 @@ FIXTURES.beos = {
     beosDesktopIcons();
     beosDeskbar('1:55 PM');
     fxWindow({
-      kind: 'about', title: 'About BeOS', x: 65, y: 68, w: 527, h: 310,
+      kind: 'about', title: 'About BeOS', x: 65, y: 66, w: 511, h: 301,
       content: function (body) {
         body.classList.add('about-beos');
         var left = el('div', 'about-left', body);
@@ -313,13 +325,15 @@ FIXTURES.beos = {
           el('div', 'about-val', info).textContent = p[1];
         });
         var right = el('div', 'about-right', body);
-        [['about-be', 'Be, BeOS, the Be and BeOS logos are trademarks or registered trademarks of Be Incorporated in the United States and other countries.  All rights reserved.'],
-         ['about-beos', 'BeOS 5 copyright © 1991-2000 Be Incorporated. All rights reserved.'],
-         ['about-g2', 'RealPlayer technology provided under license from RealNetworks, Inc. and its licensors.'],
-         ['about-fraunhofer', 'MPEG Layer-3 audio compression technology licensed by Fraunhofer IIS and THOMSON multimedia, http://www.iis.fhg.de/amm/'],
-         ['about-rsa', 'Contains security software licensed from RSA Data Security Inc.'],
-         [null, 'USB provided with support in part by Intel Corporation; Portions Copyright 1997-2000 Intel Corporation.'],
-         [null, 'Indeo ® Video Technologies in part provided by Intel Corporation, Copyright 1996-2000 Intel Corporation.']].forEach(function (p) {
+        // \n = the emulator's own wrap points (our Helvetica word widths
+        // differ enough that no single column width reproduces them).
+        [['about-be', 'Be, BeOS, the Be and BeOS logos are trademarks\nor registered trademarks of Be Incorporated in\nthe United States and other countries.  All rights\nreserved.'],
+         ['about-beos', 'BeOS 5 copyright © 1991-2000 Be Incorporated.\nAll rights reserved.'],
+         ['about-g2', 'RealPlayer technology provided under license\nfrom RealNetworks, Inc. and its licensors.'],
+         ['about-fraunhofer', 'MPEG Layer-3 audio compression technology\nlicensed by Fraunhofer IIS and THOMSON\nmultimedia, http://www.iis.fhg.de/amm/'],
+         ['about-rsa', 'Contains security software licensed from RSA\nData Security Inc.'],
+         [null, 'USB provided with support in part by Intel\nCorporation; Portions Copyright 1997-2000 Intel\nCorporation.'],
+         [null, 'Indeo ® Video Technologies in part provided by\nIntel Corporation, Copyright 1996-2000 Intel\nCorporation.']].forEach(function (p) {
           var row = el('div', 'about-legal-row', right);
           var cell = el('div', 'about-legal-logo', row);
           if (p[0]) el('img', null, cell).src = 'icons/beos/' + p[0] + '.png';

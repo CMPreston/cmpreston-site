@@ -80,8 +80,7 @@ function showMenu(items, x, y, level) {
                         (it.def ? ' default' : '') +
                         (it.header ? ' header' : '') +
                         (it.hover ? ' forced-hover' : ''), m);
-    if (SKIN === 'beos') el('span', 'mi-check', row).textContent =
-      it.checked ? '✓' : '';
+    if (SKIN === 'beos') el('span', 'mi-check' + (it.checked ? ' checked' : ''), row);
     if (it.icon) {
       var mi = el('img', 'mi-icon', row);
       mi.src = iconPath(it.icon);
@@ -92,8 +91,9 @@ function showMenu(items, x, y, level) {
     if (it.accel) {
       var acc = el('span', 'menu-accel', row);
       if (it.accel.indexOf('ALT ') === 0) {
-        el('span', 'altcap', acc).textContent = 'ALT';
-        acc.appendChild(document.createTextNode(' ' + it.accel.slice(4)));
+        acc.className += ' accel-alt';
+        el('img', 'altcap', acc).src = iconPath('menu-altkey');
+        el('span', 'accel-letter', acc).textContent = it.accel.slice(4);
       } else {
         acc.textContent = it.accel;
       }
