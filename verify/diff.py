@@ -36,7 +36,7 @@ def main():
                 row['status'] = f'SIZE-MISMATCH ref={ref.size} build={build.size}'
                 results.append(row)
                 continue
-            diff = Image.new('RGB', ref.size)
+            diff = Image.new('RGBA', ref.size)
             n = pixelmatch(ref, build, diff,
                            threshold=CFG['pixel_threshold'],
                            includeAA=True)
