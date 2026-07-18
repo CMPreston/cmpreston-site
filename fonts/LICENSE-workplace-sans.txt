@@ -1,0 +1,188 @@
+WORKPLACE SANS FONT
+  Version 1.04
+
+INTRODUCTION
+
+  Workplace Sans is a semi-condensed sans-serif TrueType font with Unicode
+  encoding.  It has been designed for use as a dialog/user interface font, and
+  is inspired by the OS/2 bitmap font "WarpSans".
+
+  Workplace Sans is not well hinted, and therefore displays best under
+  environments where it can be anti-aliased.  Alternatively, I provide
+  builds which include embedded bitmaps for certain point sizes, which I
+  recommend using if anti-aliasing is not available.
+
+  Workplace Sans is presently available in Regular and Bold weights.
+
+
+INSTALLATION
+
+  To install or upgrade these fonts under Microsoft Windows, use the menu 
+  options of the Fonts page in the Control Panel, or use Windows Explorer 
+  to install them (e.g. by selecting WPSU.TTF and WPSUB.TTF and choosing
+  'Install' from the toolbar).
+
+  To install these fonts under Mac OS X, drag and drop the .TTF files into 
+  the Fonts folder under your Library.
+
+  To install these fonts under OS/2, use the Font Palette (choose 'Edit', then
+  'Add', and type in the name of the temporary directory where the font files
+  are located).  To upgrade from a previous release under OS/2, close all
+  applications, then copy the TTF file(s) over the existing ones (usually
+  located in <bootdrive>\PSFONTS).  If you get an error that the file cannot be
+  written, you may have to reboot first.  In either case, you will have to 
+  reboot after updating the file.
+
+  Users of other operating systems should undertake whatever steps are
+  appropriate for their platform.
+
+
+DESIGN NOTES
+
+  The general design objectives of Workplace Sans have shifted several times
+  over its history.  The earliest versions (up to V0.4) focused on trying to
+  rasterize as closely as possible to the WarpSans bitmap font at one or two
+  specific point sizes.  However, after Workplace Sans was adopted as the
+  standard  interface font for various projects which use FreeType for anti-
+  aliasing text, I decided to relax that principle somewhat in favour of
+  making the font look more consistent and attractive when antialiased at all
+  sizes.
+
+  Starting with V0.8, I've decided to move much more sharply away from the
+  goal of having the rasterized outlines resemble WarpSans.  There seems to
+  be little point in compromising design consistency to this end, since I am
+  now providing (optional) embedded bitmaps which closely mimic the appearance
+  of WarpSans at the applicable point sizes.
+
+  Those who want the WarpSans style in their menus and dialogs can use the
+  bitmapped versions, leaving me free to provide a font which is readable and
+  consistent-looking at a variety of sizes.
+
+  Workplace Sans corresponds (so far as is possible) to WarpSans at the
+  following point sizes:
+
+                     96dpi                     120dpi
+    WarpSans 04x14:  9.Workplace Sans          7.Workplace Sans
+    WarpSans 06x16:  11.Workplace Sans         9.Workplace Sans
+
+  The resemblance to WarpSans is only approximate, unless the bitmapped
+  versions are used.
+
+
+NOTICES
+
+  This typeface was inspired by the OS/2 bitmap font "WarpSans", which is
+  presumed to be copyright (C) IBM Corporation.  However, as an outline
+  font, Workplace Sans is in all legal and practical senses an independent
+  creative work, and cannot be considered a derivative of the former.
+
+  The 15-pixel embedded bitmaps (corresponding to 9pt at 120 dpi) are
+  visually very similar to those of WarpSans.  However, they were derived
+  independently by rasterizing the outlines and then cleaning up the images
+  manually.  It is the author's belief that this process is sufficiently
+  independent to avoid any infringments.  (According to U.S. law, font
+  bitmap designs are not copyrightable; only the actual implementation is
+  protected.)
+
+  Workplace Sans is licensed under the SIL Open Font License.  The terms
+  are listed below.
+
+
+LICENSE
+
+Copyright (c) 2003-2019 Alexander Taylor (http://www.altsan.org),
+with Reserved Font Name Workplace Sans.
+
+This Font Software is licensed under the SIL Open Font License, Version 1.1.
+This license is copied below, and is also available with a FAQ at:
+http://scripts.sil.org/OFL
+
+
+-----------------------------------------------------------
+SIL OPEN FONT LICENSE Version 1.1 - 26 February 2007
+-----------------------------------------------------------
+
+PREAMBLE
+The goals of the Open Font License (OFL) are to stimulate worldwide
+development of collaborative font projects, to support the font creation
+efforts of academic and linguistic communities, and to provide a free and
+open framework in which fonts may be shared and improved in partnership
+with others.
+
+The OFL allows the licensed fonts to be used, studied, modified and
+redistributed freely as long as they are not sold by themselves. The
+fonts, including any derivative works, can be bundled, embedded,
+redistributed and/or sold with any software provided that any reserved
+names are not used by derivative works. The fonts and derivatives,
+however, cannot be released under any other type of license. The
+requirement for fonts to remain under this license does not apply
+to any document created using the fonts or their derivatives.
+
+DEFINITIONS
+"Font Software" refers to the set of files released by the Copyright
+Holder(s) under this license and clearly marked as such. This may
+include source files, build scripts and documentation.
+
+"Reserved Font Name" refers to any names specified as such after the
+copyright statement(s).
+
+"Original Version" refers to the collection of Font Software components as
+distributed by the Copyright Holder(s).
+
+"Modified Version" refers to any derivative made by adding to, deleting,
+or substituting -- in part or in whole -- any of the components of the
+Original Version, by changing formats or by porting the Font Software to a
+new environment.
+
+"Author" refers to any designer, engineer, programmer, technical
+writer or other person who contributed to the Font Software.
+
+PERMISSION & CONDITIONS
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of the Font Software, to use, study, copy, merge, embed, modify,
+redistribute, and sell modified and unmodified copies of the Font
+Software, subject to the following conditions:
+
+1) Neither the Font Software nor any of its individual components,
+in Original or Modified Versions, may be sold by itself.
+
+2) Original or Modified Versions of the Font Software may be bundled,
+redistributed and/or sold with any software, provided that each copy
+contains the above copyright notice and this license. These can be
+included either as stand-alone text files, human-readable headers or
+in the appropriate machine-readable metadata fields within text or
+binary files as long as those fields can be easily viewed by the user.
+
+3) No Modified Version of the Font Software may use the Reserved Font
+Name(s) unless explicit written permission is granted by the corresponding
+Copyright Holder. This restriction only applies to the primary font name as
+presented to the users.
+
+4) The name(s) of the Copyright Holder(s) or the Author(s) of the Font
+Software shall not be used to promote, endorse or advertise any
+Modified Version, except to acknowledge the contribution(s) of the
+Copyright Holder(s) and the Author(s) or with their explicit written
+permission.
+
+5) The Font Software, modified or unmodified, in part or in whole,
+must be distributed entirely under this license, and must not be
+distributed under any other license. The requirement for fonts to
+remain under this license does not apply to any document created
+using the Font Software.
+
+TERMINATION
+This license becomes null and void if any of the above conditions are
+not met.
+
+DISCLAIMER
+THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO ANY WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT
+OF COPYRIGHT, PATENT, TRADEMARK, OR OTHER RIGHT. IN NO EVENT SHALL THE
+COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+INCLUDING ANY GENERAL, SPECIAL, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL
+DAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM
+OTHER DEALINGS IN THE FONT SOFTWARE.
+
+
