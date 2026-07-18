@@ -1,0 +1,147 @@
+/* OS/2 Warp 3 skin (1994: teal desktop, purple-navy title bars, gray chrome).
+   Every value that the pixel-diff loop tunes lives in :root. */
+:root {
+  --desk-bg: #008284;
+  --title-active: #420084;
+  --title-active-fg: #ffffff;
+  --title-inactive: #cecfce;
+  --title-inactive-fg: #000000;
+  --title-h: 20px;
+  --chrome: #cecfce;
+  --chrome-hi: #ffffff;
+  --chrome-lo: #848284;
+  --chrome-dk: #424142;
+  --content-bg: #ffffff;
+  --desk-label-fg: #000000;
+  --sel-bg: #666699;
+  --sel-fg: #ffffff;
+  --menu-bg: #cecfce;
+  --menu-fg: #000000;
+  --menu-hl-bg: #666699;
+  --menu-hl-fg: #ffffff;
+  --ui-font: 'System Proportional', 'MS Sans Serif', Tahoma, 'Segoe UI', sans-serif;
+  --ui-size: 11px;
+}
+
+body { background: var(--desk-bg); font-family: var(--ui-font);
+       font-size: var(--ui-size); -webkit-font-smoothing: none; }
+
+/* ---- desktop icons ---- */
+.desk-icon .icon-label { color: var(--desk-label-fg); }
+.icon-label { font-size: var(--ui-size); margin-top: 3px; }
+.icon.selected .icon-label span { background: var(--sel-bg); color: var(--sel-fg); }
+
+/* ---- windows ---- */
+.win { background: var(--chrome); border: 1px solid var(--chrome-dk);
+       box-shadow: inset 1px 1px 0 var(--chrome-hi),
+                   inset -1px -1px 0 var(--chrome-lo);
+       padding: 2px; }
+.titlebar { display: flex; align-items: center; height: var(--title-h);
+            background: var(--title-active); }
+.win:not(.win-active) .titlebar { background: var(--title-inactive); }
+.title { flex: 1 1 auto; color: var(--title-active-fg); font-weight: bold;
+         font-size: 12px; padding-left: 5px; white-space: nowrap;
+         overflow: hidden; }
+.win:not(.win-active) .title { color: var(--title-inactive-fg); }
+.sysmenu { width: 22px; height: var(--title-h); border: 0; background: var(--chrome);
+           display: flex; align-items: center; justify-content: center; }
+.sysmenu img { width: 20px; height: 16px; image-rendering: pixelated; }
+.tb-btn { width: 22px; height: var(--title-h); border: 0; background: var(--chrome);
+          box-shadow: inset 1px 1px 0 var(--chrome-hi),
+                      inset -1px -1px 0 var(--chrome-lo);
+          position: relative; margin-left: 1px; }
+.tb-btn:active { box-shadow: inset 1px 1px 0 var(--chrome-lo); }
+.tb-hide::after { content: ''; position: absolute; inset: 0; margin: auto;
+                  width: 6px; height: 6px; border: 1px solid #000; }
+.tb-max::after { content: ''; position: absolute; inset: 0; margin: auto;
+                 width: 10px; height: 10px; border: 1px solid #000; }
+
+.win-body { background: var(--content-bg); }
+.folder-view { background: var(--content-bg); width: 100%; height: 100%; }
+.grid-icon .icon-label { color: #000; }
+
+/* ---- menubar & menus ---- */
+.menubar { background: var(--chrome); border-bottom: 1px solid var(--chrome-lo);
+           padding: 2px 0 2px 2px; }
+.menubar-item { padding: 2px 8px; }
+.menubar-item:hover { background: var(--menu-hl-bg); color: var(--menu-hl-fg); }
+.menu { background: var(--menu-bg); border: 1px solid var(--chrome-dk);
+        box-shadow: inset 1px 1px 0 var(--chrome-hi),
+                    inset -1px -1px 0 var(--chrome-lo);
+        padding: 3px; min-width: 160px; }
+.menu-item { padding: 3px 12px; color: var(--menu-fg); }
+.menu-item.default .menu-label { font-weight: bold; }
+.menu-item:hover:not(.disabled) { background: var(--menu-hl-bg);
+                                  color: var(--menu-hl-fg); }
+.menu-item.disabled { color: #808080; }
+.menu-sep { height: 1px; background: var(--chrome-lo); margin: 3px 2px;
+            box-shadow: 0 1px 0 var(--chrome-hi); }
+.menu-arrow::after { content: ''; display: inline-block; width: 0; height: 0;
+        border-left: 5px solid #000; border-top: 4px solid transparent;
+        border-bottom: 4px solid transparent; }
+
+/* ---- LaunchPad ---- */
+#launchpad { position: absolute; left: 50%; transform: translateX(-50%);
+             bottom: 20px; display: flex; align-items: center;
+             background: var(--chrome); border: 1px solid var(--chrome-dk);
+             box-shadow: inset 1px 1px 0 var(--chrome-hi),
+                         inset -1px -1px 0 var(--chrome-lo);
+             padding: 8px 10px; gap: 10px; }
+.lp-textcols { display: flex; gap: 6px; }
+.lp-col { display: flex; flex-direction: column; gap: 6px; }
+.lp-textbtn { font: inherit; padding: 3px 10px; min-width: 76px;
+              background: var(--chrome); border: 1px solid var(--chrome-dk);
+              box-shadow: inset 1px 1px 0 var(--chrome-hi),
+                          inset -1px -1px 0 var(--chrome-lo); }
+.lp-textbtn:active { box-shadow: inset 1px 1px 0 var(--chrome-lo); }
+.lp-icons { display: flex; gap: 6px; }
+.lp-cell { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.lp-drawer { width: 34px; height: 7px; border: 1px solid var(--chrome-lo);
+             background: var(--chrome);
+             box-shadow: inset 1px 1px 0 var(--chrome-hi); }
+.lp-iconbtn { width: 40px; height: 36px; background: var(--chrome);
+              border: 1px solid var(--chrome-dk);
+              box-shadow: inset 1px 1px 0 var(--chrome-hi),
+                          inset -1px -1px 0 var(--chrome-lo); }
+.lp-iconbtn img { width: 32px; height: 26px; image-rendering: pixelated; }
+
+/* ---- documents ---- */
+.iframe-clip { right: 15px; bottom: 15px; }
+.sb { background: var(--chrome); }
+.sb-v { position: absolute; top: 0; right: 0; bottom: 15px; width: 15px;
+        display: flex; flex-direction: column;
+        border-left: 1px solid var(--chrome-lo); }
+.sb-h { position: absolute; left: 0; right: 15px; bottom: 0; height: 15px;
+        border-top: 1px solid var(--chrome-lo); }
+.sb-btn { height: 15px; background: var(--chrome);
+          border: 1px solid var(--chrome-lo);
+          box-shadow: inset 1px 1px 0 var(--chrome-hi); }
+.sb-track { flex: 1 1 auto; position: relative; background: #b0b0b0; }
+.sb-thumb { position: absolute; left: 1px; right: 1px;
+            background: var(--chrome); border: 1px solid var(--chrome-lo);
+            box-shadow: inset 1px 1px 0 var(--chrome-hi); }
+
+/* ---- about dialog ---- */
+.about-os2 { background: var(--chrome); padding: 8px 0 10px; }
+.about-row { display: flex; padding: 6px 14px 10px; }
+.about-icon { width: 40px; height: 40px; image-rendering: pixelated;
+              margin: 14px 12px 0 4px; }
+.about-lines { font-size: 12px; line-height: 1.55; }
+.about-btnrow { display: flex; justify-content: center; padding-top: 4px; }
+.os2-button { font: inherit; min-width: 60px; padding: 3px 12px;
+              background: var(--chrome); border: 1px solid #000;
+              box-shadow: inset 1px 1px 0 var(--chrome-hi),
+                          inset -1px -1px 0 var(--chrome-lo); }
+.os2-button:active { box-shadow: inset 1px 1px 0 var(--chrome-lo); }
+.default-button { outline: 1px solid #000; outline-offset: 2px; }
+
+/* ---- mobile ---- */
+body.mobile { background: var(--desk-bg); }
+.m-head { background: var(--title-active); color: #fff; font-weight: bold;
+          padding: 12px; display: flex; justify-content: space-between;
+          align-items: center; }
+.m-row { background: var(--chrome); border-bottom: 1px solid var(--chrome-lo);
+         color: #000; }
+.m-bar { background: var(--title-active); color: #fff; padding: 10px;
+         font-weight: bold; }
+.m-foot { padding: 14px; color: #d0ecec; font-size: 12px; }

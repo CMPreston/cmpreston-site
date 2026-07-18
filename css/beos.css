@@ -1,0 +1,164 @@
+/* BeOS skin — values measured from our QEMU BeOS R5.0.1 captures
+   (reference/raw/beos-emulator/). The emulator ran 640x480x16, so colors
+   carry RGB565 quantization; the references do too, so we match them.
+   Every tunable lives in :root. */
+:root {
+  --desk-bg: #316598;          /* measured (49,101,156) */
+  --chrome: #dedbde;           /* window face / menu face (222,219,222) */
+  --chrome-hi: #ffffff;
+  --chrome-lo: #9c9e9c;
+  --chrome-dk: #636563;        /* menu border (99,101,99) */
+  --frame-border: #181818;
+  --tab-yellow: #f8cb00;
+  --tab-yellow-border: #8c7300;
+  --tab-inactive: #efefef;
+  --tab-text: #000000;
+  --tab-inactive-text: #52515a;
+  --tab-h: 18px;
+  --content-bg: #ffffff;
+  --label-fg: #000000;
+  --sel-label-bg: #000000;
+  --sel-label-fg: #ffffff;
+  --menu-hl: #a5a2a5;
+  --sb-w: 14px;
+  --ui-font: Helvetica, 'Nimbus Sans', 'TeX Gyre Heros', Arial, sans-serif;
+  --ui-size: 12px;
+}
+
+body { background: var(--desk-bg); font-family: var(--ui-font);
+       font-size: var(--ui-size); }
+
+/* ---- desktop icons ---- */
+.desk-icon { width: 72px; }
+.icon-label { color: var(--label-fg); font-size: 11px; margin-top: 2px; }
+.icon.selected .icon-label span { background: var(--sel-label-bg);
+                                  color: var(--sel-label-fg);
+                                  padding: 0 2px; }
+
+/* ---- window: yellow tab over gray frame ---- */
+.tab { position: relative; display: inline-flex; align-items: center;
+       height: var(--tab-h);
+       background: var(--tab-yellow);
+       border: 1px solid var(--frame-border); border-bottom: none;
+       padding: 0 4px; margin-left: 2px; max-width: 85%; }
+.win:not(.win-active) .tab { background: var(--tab-inactive); }
+.tab-title { font-weight: bold; font-size: 12px; margin: 0 8px 0 6px;
+             white-space: nowrap; overflow: hidden; color: var(--tab-text); }
+.win:not(.win-active) .tab-title { color: var(--tab-inactive-text); }
+.tab-close, .tab-zoom { width: 12px; height: 12px; flex: 0 0 auto;
+       background: var(--tab-yellow);
+       border: 1px solid var(--tab-yellow-border);
+       box-shadow: inset 1px 1px 0 #fff29c, inset -1px -1px 0 #c8a400; }
+.tab-zoom { position: relative; margin-left: auto; }
+.tab-zoom::after { content: ''; position: absolute; left: 1px; top: 1px;
+       width: 6px; height: 6px; border: 1px solid var(--tab-yellow-border);
+       background: var(--tab-yellow); }
+.win:not(.win-active) .tab-close,
+.win:not(.win-active) .tab-zoom { background: var(--tab-inactive);
+       border-color: #9c9e9c; box-shadow: inset 1px 1px 0 #ffffff,
+       inset -1px -1px 0 #c6c3c6; }
+.tab-close:active { box-shadow: inset 1px 1px 0 #c8a400; }
+
+.frame { border: 1px solid var(--frame-border);
+         background: var(--chrome);
+         box-shadow: inset 1px 1px 0 var(--chrome-hi),
+                     inset -1px -1px 0 var(--chrome-lo);
+         padding: 2px; position: relative; }
+.win-body { background: var(--content-bg); position: relative;
+            border: 1px solid var(--chrome-lo); }
+
+/* ---- menubar & menus ---- */
+.menubar { background: var(--chrome); padding: 2px 0 3px 6px; }
+.menubar-item { padding: 2px 10px 2px 2px; margin-right: 8px; }
+.menubar-item:hover { background: var(--menu-hl); }
+.menu { background: var(--chrome); border: 1px solid var(--chrome-dk);
+        box-shadow: inset 1px 1px 0 var(--chrome-hi),
+                    inset -1px -1px 0 var(--chrome-lo);
+        padding: 2px 1px; min-width: 148px; }
+.menu-item { padding: 1px 8px 2px 2px; color: #000; align-items: center;
+             min-height: 15px; }
+.menu-item.forced-hover,
+.menu-item:hover:not(.disabled) { background: var(--menu-hl); }
+.menu-item.disabled { color: #737573; }
+.menu-item.header .menu-label { font-weight: bold; }
+.mi-check { width: 12px; flex: 0 0 auto; font-size: 10px; }
+.mi-icon { width: 16px; height: 16px; margin-right: 4px;
+           image-rendering: pixelated; }
+.menu-sep { height: 1px; background: var(--chrome-lo); margin: 2px 0;
+            box-shadow: 0 1px 0 var(--chrome-hi); }
+.menu-arrow { margin-left: 16px; }
+.menu-arrow::after { content: ''; display: inline-block; width: 0; height: 0;
+        border-left: 5px solid #737573; border-top: 4px solid transparent;
+        border-bottom: 4px solid transparent; }
+.menu-accel { margin-left: 20px; display: inline-flex; align-items: center;
+              gap: 3px; font-size: 11px; }
+.altcap { border: 1px solid #737573; border-radius: 2px; font-size: 7px;
+          padding: 0 2px; line-height: 9px; background: var(--chrome-hi); }
+.menu-item u, .menubar-item u { text-decoration: underline; }
+
+/* ---- deskbar ---- */
+#deskbar { position: absolute; top: 0; right: 0; width: 122px;
+           background: var(--chrome);
+           border-left: 1px solid var(--frame-border);
+           border-bottom: 1px solid var(--frame-border); }
+.db-logo { padding: 2px; }
+.db-logo img { display: block; width: 100%; image-rendering: pixelated; }
+.db-tray { text-align: right; padding: 3px 6px; margin: 0 2px;
+           border: 1px solid var(--chrome-lo);
+           box-shadow: inset 1px 1px 0 #cccccc;
+           background: #c6c3c6; font-size: 11px; }
+.db-apps { padding: 2px 0; }
+.db-app { display: flex; align-items: center; gap: 5px; padding: 2px 6px; }
+.db-app img { width: 16px; height: 16px; image-rendering: pixelated; }
+.db-app span { font-size: 11px; }
+
+/* ---- scrollbars (double arrows, knurled look) ---- */
+.sb { background: var(--chrome); }
+.sb-v { position: absolute; top: 0; right: 0; bottom: 0; width: var(--sb-w);
+        border-left: 1px solid var(--chrome-lo); }
+.sb-btn { flex: 0 0 12px; background: var(--chrome);
+          border: 1px solid var(--chrome-lo);
+          box-shadow: inset 1px 1px 0 var(--chrome-hi); }
+.sb-track { background: #cbc8cb; }
+.sb-h { height: var(--sb-w); }
+.status-row { height: 15px; background: var(--chrome);
+              border-top: 1px solid var(--chrome-lo); }
+.status-box { font-size: 10px; padding: 1px 8px 0 4px; min-width: 66px;
+              border-right: 1px solid var(--chrome-lo); }
+.resize-box { width: 15px; border-left: 1px solid var(--chrome-lo);
+              background: var(--chrome); }
+.resize-corner { position: absolute; right: 2px; bottom: 2px;
+                 width: 14px; height: 14px; pointer-events: none; }
+
+/* ---- documents / editor ---- */
+.editor-body { background: var(--content-bg); }
+.editor-text { padding: 2px 4px; font-size: 12px; line-height: 13px; }
+.editor-caret { background: #000; height: 11px; }
+.iframe-clip { right: var(--sb-w); }
+
+/* ---- about dialog ---- */
+.win-about .win-body { border: none; }
+.about-beos { display: flex; background: var(--chrome); }
+.about-left { width: 202px; background: var(--chrome);
+              border-right: 1px solid #9c9e9c; padding-bottom: 8px; }
+.about-logo-img { display: block; width: 195px; image-rendering: pixelated; }
+.about-info { padding: 6px 10px; font-size: 12px; }
+.about-key { font-weight: bold; margin-top: 9px; }
+.about-val { margin-top: 1px; }
+.about-right { flex: 1 1 auto; background: var(--content-bg);
+               padding: 6px 6px; overflow: hidden; }
+.about-legal-row { display: flex; gap: 6px; margin-bottom: 9px; }
+.about-legal-logo { flex: 0 0 56px; }
+.about-legal-logo img { max-width: 56px; image-rendering: pixelated; }
+.about-legal-text { font-size: 11px; line-height: 13px; }
+
+/* ---- mobile ---- */
+body.mobile { background: var(--desk-bg); }
+.m-head { background: var(--tab-yellow); font-weight: bold; padding: 12px;
+          border-bottom: 2px solid var(--frame-border); display: flex;
+          justify-content: space-between; align-items: center; }
+.m-row { background: var(--chrome); border-bottom: 1px solid var(--chrome-lo);
+         color: #000; }
+.m-bar { background: var(--tab-yellow); padding: 10px;
+         border-bottom: 2px solid var(--frame-border); font-weight: bold; }
+.m-foot { padding: 14px; color: #dce6f0; font-size: 12px; }

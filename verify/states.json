@@ -1,0 +1,14 @@
+{
+  "_comment": "12 checkpoint states: 6 per skin. reference paths are relative to reference/<skin>/. A state with missing:true has no acquired reference yet and is reported as such (never silently skipped).",
+  "states": [
+    "01-desktop",
+    "02-folder",
+    "03-nested",
+    "04-document",
+    "05-context-menu",
+    "06-dialog"
+  ],
+  "skins": ["beos", "os2"],
+  "pass_threshold_pct": 2.0,
+  "pixel_threshold": 0.1
+}
