@@ -9,12 +9,12 @@
   --chrome-lo: #9c9e9c;
   --chrome-dk: #636563;        /* menu border (99,101,99) */
   --frame-border: #181818;
-  --tab-yellow: #f8cb00;
+  --tab-yellow: #ffcb00;       /* measured (255,203,0) in 02/03/04 refs */
   --tab-yellow-border: #8c7300;
-  --tab-inactive: #efefef;
+  --tab-inactive: #efebef;     /* measured (239,235,239) */
   --tab-text: #000000;
-  --tab-inactive-text: #52515a;
-  --tab-h: 18px;
+  --tab-inactive-text: #525152;
+  --tab-h: 20px;               /* top border + highlight row + 18 face rows */
   --content-bg: #ffffff;
   --label-fg: #000000;
   --sel-label-bg: #000000;
@@ -23,77 +23,127 @@
   --sb-w: 14px;
   --ui-font: Helvetica, 'Nimbus Sans', 'TeX Gyre Heros', Arial, sans-serif;
   --ui-size: 12px;
+  /* R5 window-frame ring palette (RGB565-quantized, measured) */
+  --bevel-mid: #9c9a9c;        /* (156,154,156) */
+  --bevel-dark: #636163;       /* (99,97,99) */
+  --bevel-shade: #8c8a8c;      /* (140,138,140) */
+  --sb-face: #f7f3f7;          /* (247,243,247) scrollbar face/track */
 }
 
+/* Aliased text everywhere: the R5 references carry only faint grayscale AA
+   (16-bit fb); Chromium's full AA mismatches it worse than no AA. */
 body { background: var(--desk-bg); font-family: var(--ui-font);
-       font-size: var(--ui-size); }
+       font-size: var(--ui-size); -webkit-font-smoothing: none; }
 
 /* ---- desktop icons ---- */
 .desk-icon { width: 72px; }
-.icon-label { color: var(--label-fg); font-size: 11px; margin-top: 2px; }
+.icon-label { color: var(--label-fg); font-size: 11px; margin-top: 2px;
+              -webkit-font-smoothing: none; }
+/* in-window icon grid: labels hug one line, centered under a 32px cell */
+.grid-icon .icon-label { align-self: center; width: max-content;
+                         white-space: nowrap; font-size: 10px;
+                         margin-left: 2px; -webkit-font-smoothing: none; }
 .icon.selected .icon-label span { background: var(--sel-label-bg);
                                   color: var(--sel-label-fg);
                                   padding: 0 2px; }
 
-/* ---- window: yellow tab over gray frame ---- */
-.tab { position: relative; display: inline-flex; align-items: center;
-       height: var(--tab-h);
+/* ---- window: yellow tab over gray frame ----
+   Geometry measured off the 02/03/04 references: tab is 20px tall
+   (1px #9c9a9c top border, 1px #ffff52 highlight, 18 yellow rows) and its
+   bottom row overlaps the frame's outermost ring. Close box 14x14 at x+4,
+   zoom 17x14 flush against the right border, title centered. */
+.tab { position: relative; z-index: 5; display: flex; width: fit-content;
+       align-items: flex-start; height: var(--tab-h); margin-bottom: -1px;
        background: var(--tab-yellow);
-       border: 1px solid var(--frame-border); border-bottom: none;
-       padding: 0 4px; margin-left: 2px; max-width: 85%; }
-.win:not(.win-active) .tab { background: var(--tab-inactive); }
-.tab-title { font-weight: bold; font-size: 12px; margin: 0 8px 0 6px;
-             white-space: nowrap; overflow: hidden; color: var(--tab-text); }
+       border: 1px solid var(--bevel-mid); border-bottom: none;
+       border-right-color: var(--bevel-dark);
+       box-shadow: inset 1px 1px 0 #ffff52;
+       padding: 0 0 0 3px; max-width: 95%; }
+.win:not(.win-active) .tab { background: var(--tab-inactive);
+       box-shadow: inset 1px 1px 0 #ffffff; }
+.tab-title { flex: 1 1 auto; font-weight: bold; font-size: 12px;
+             letter-spacing: -0.2px; line-height: 14px; text-align: center;
+             margin: 3px 0 0; white-space: nowrap; overflow: hidden;
+             color: var(--tab-text); -webkit-font-smoothing: none; }
 .win:not(.win-active) .tab-title { color: var(--tab-inactive-text); }
-.tab-close, .tab-zoom { width: 12px; height: 12px; flex: 0 0 auto;
-       background: var(--tab-yellow);
-       border: 1px solid var(--tab-yellow-border);
-       box-shadow: inset 1px 1px 0 #fff29c, inset -1px -1px 0 #c8a400; }
-.tab-zoom { position: relative; margin-left: auto; }
-.tab-zoom::after { content: ''; position: absolute; left: 1px; top: 1px;
-       width: 6px; height: 6px; border: 1px solid var(--tab-yellow-border);
-       background: var(--tab-yellow); }
-.win:not(.win-active) .tab-close,
-.win:not(.win-active) .tab-zoom { background: var(--tab-inactive);
-       border-color: #9c9e9c; box-shadow: inset 1px 1px 0 #ffffff,
-       inset -1px -1px 0 #c6c3c6; }
-.tab-close:active { box-shadow: inset 1px 1px 0 #c8a400; }
+.tab-close { width: 14px; height: 14px; flex: 0 0 auto; margin-top: 3px;
+       background: url(../icons/beos/tab-close.png); }
+.tab-zoom { width: 17px; height: 14px; flex: 0 0 auto; margin-top: 3px;
+       background: url(../icons/beos/tab-zoom.png); }
+.win:not(.win-active) .tab-close { background-image: url(../icons/beos/tab-close-i.png); }
+.win:not(.win-active) .tab-zoom { background-image: url(../icons/beos/tab-zoom-i.png); }
 
-.frame { border: 1px solid var(--frame-border);
-         background: var(--chrome);
-         box-shadow: inset 1px 1px 0 var(--chrome-hi),
-                     inset -1px -1px 0 var(--chrome-lo);
-         padding: 2px; position: relative; }
-.win-body { background: var(--content-bg); position: relative;
-            border: 1px solid var(--chrome-lo); }
+/* Frame: five 1px rings, outside in — #9c9a9c/#636163 edge, #fff/#8c8a8c
+   bevel, #dedbde face, #8c8a8c/#fff bevel, #9c9a9c inner edge. */
+.frame { background: var(--chrome); padding: 5px; position: relative; }
+.frame::before, .frame::after { content: ''; position: absolute;
+         pointer-events: none; z-index: 3; }
+.frame::before { inset: 0; border: 1px solid;
+         border-color: var(--bevel-mid) var(--bevel-dark)
+                       var(--bevel-dark) var(--bevel-mid);
+         box-shadow: inset 1px 1px 0 #ffffff,
+                     inset -1px -1px 0 var(--bevel-shade); }
+.frame::after { inset: 3px; border: 1px solid;
+         border-color: var(--bevel-shade) #ffffff #ffffff var(--bevel-shade);
+         box-shadow: inset 1px 1px 0 var(--bevel-mid),
+                     inset -1px -1px 0 var(--bevel-mid); }
+.win:not(.win-active) .frame { background: var(--tab-inactive); }
+.win:not(.win-active) .frame::before {
+         box-shadow: inset 1px 1px 0 #ffffff,
+                     inset -1px -1px 0 var(--bevel-mid); }
+.win:not(.win-active) .frame::after {
+         border-color: var(--bevel-mid) #ffffff #ffffff var(--bevel-mid); }
+.win-body { background: var(--content-bg); position: relative; }
 
 /* ---- menubar & menus ---- */
-.menubar { background: var(--chrome); padding: 2px 0 3px 6px; }
-.menubar-item { padding: 2px 10px 2px 2px; margin-right: 8px; }
+/* 20px: 1px #efefef top highlight, 17 face rows, #bdbabd + #9c9a9c bottom */
+.menubar { background: var(--chrome); height: 20px; align-items: center;
+           padding: 0 0 0 7px;
+           box-shadow: inset 0 1px 0 #efefef, inset 0 -1px 0 var(--bevel-mid),
+                       inset 0 -2px 0 #bdbabd; }
+.menubar-item { padding: 0; margin-right: 18px; font-size: 11px;
+                -webkit-font-smoothing: none; }
 .menubar-item:hover { background: var(--menu-hl); }
+/* Tracker menus — geometry measured off the 05 reference: 161px outer,
+   1px #636563 border + 1px bevel (#efefef / #9c9a9c), 15px items (22px
+   header row), 10.5px bilevel text at x+13, separators #bdbabd/#efefef
+   with 4px/5px margins. Check, cascade arrow and ALT keycap are sprite
+   crops from the reference. */
 .menu { background: var(--chrome); border: 1px solid var(--chrome-dk);
-        box-shadow: inset 1px 1px 0 var(--chrome-hi),
-                    inset -1px -1px 0 var(--chrome-lo);
-        padding: 2px 1px; min-width: 148px; }
-.menu-item { padding: 1px 8px 2px 2px; color: #000; align-items: center;
-             min-height: 15px; }
+        box-shadow: inset -1px -1px 0 var(--bevel-mid),
+                    inset 1px 1px 0 #efefef;
+        padding: 1px; min-width: 161px; font-size: 10px;
+        letter-spacing: 0.45px; -webkit-font-smoothing: none; }
+.menu-item { display: flex; align-items: center; position: relative;
+             height: 15px; padding: 0; color: #000; }
 .menu-item.forced-hover,
 .menu-item:hover:not(.disabled) { background: var(--menu-hl); }
 .menu-item.disabled { color: #737573; }
-.menu-item.header .menu-label { font-weight: bold; }
-.mi-check { width: 12px; flex: 0 0 auto; font-size: 10px; }
-.mi-icon { width: 16px; height: 16px; margin-right: 4px;
-           image-rendering: pixelated; }
-.menu-sep { height: 1px; background: var(--chrome-lo); margin: 2px 0;
-            box-shadow: 0 1px 0 var(--chrome-hi); }
-.menu-arrow { margin-left: 16px; }
-.menu-arrow::after { content: ''; display: inline-block; width: 0; height: 0;
-        border-left: 5px solid #737573; border-top: 4px solid transparent;
-        border-bottom: 4px solid transparent; }
+.menu-item.header { height: 22px; }
+.menu-item:last-child { height: 14px; }
+.mi-check { flex: 0 0 13px; width: 13px; align-self: stretch; font-size: 0;
+            background: no-repeat 2px 1px; }
+.mi-check.checked { background-image: url(../icons/beos/menu-check.png); }
+.mi-icon { width: 16px; height: 16px; align-self: flex-start;
+           margin: 2px 3px 0 1px; image-rendering: pixelated; }
+.menu-label { white-space: nowrap; transform: translateY(-1px); }
+.menu-sep { height: 2px; border-top: 1px solid #bdbabd; background: #efefef;
+            margin: 4px 0 5px; box-shadow: none; }
+.menu-item.header + .menu-sep { margin-top: 2px; }
+.menu-arrow { position: absolute; right: 4px; top: 4px; width: 11px;
+              height: 9px; margin: 0;
+              background: url(../icons/beos/menu-arrow.png) no-repeat; }
+.menu-arrow::after { content: none; }
+.menu-item.header .menu-arrow { top: 5px; }
 .menu-accel { margin-left: 20px; display: inline-flex; align-items: center;
               gap: 3px; font-size: 11px; }
-.altcap { border: 1px solid #737573; border-radius: 2px; font-size: 7px;
-          padding: 0 2px; line-height: 9px; background: var(--chrome-hi); }
+.menu-accel.accel-alt { position: absolute; left: 123px; top: 0; bottom: 0;
+              margin: 0; font-size: 10px; }
+.altcap { display: block; position: absolute; left: 0; top: 2px;
+          width: 17px; height: 11px; }
+.accel-letter { position: absolute; left: 22px; top: 0; height: 100%;
+                display: flex; align-items: center;
+                transform: translateY(-1px); }
 .menu-item u, .menubar-item u { text-decoration: underline; }
 
 /* ---- deskbar ---- */
@@ -112,45 +162,105 @@ body { background: var(--desk-bg); font-family: var(--ui-font);
 .db-app img { width: 16px; height: 16px; image-rendering: pixelated; }
 .db-app span { font-size: 11px; }
 
-/* ---- scrollbars (double arrows, knurled look) ---- */
-.sb { background: var(--chrome); }
+/* ---- scrollbars ----
+   R5 style: DOUBLE arrow pairs at both ends. Caps are sprite crops from the
+   references (each cap = highlight row/col + two 13px buttons + separators);
+   the track is flat #f7f3f7 with a 1px white inner highlight. */
+.sb { background: var(--sb-face); }
 .sb-v { position: absolute; top: 0; right: 0; bottom: 0; width: var(--sb-w);
-        border-left: 1px solid var(--chrome-lo); }
-.sb-btn { flex: 0 0 12px; background: var(--chrome);
-          border: 1px solid var(--chrome-lo);
-          box-shadow: inset 1px 1px 0 var(--chrome-hi); }
-.sb-track { background: #cbc8cb; }
-.sb-h { height: var(--sb-w); }
-.status-row { height: 15px; background: var(--chrome);
-              border-top: 1px solid var(--chrome-lo); }
-.status-box { font-size: 10px; padding: 1px 8px 0 4px; min-width: 66px;
-              border-right: 1px solid var(--chrome-lo); }
-.resize-box { width: 15px; border-left: 1px solid var(--chrome-lo);
-              background: var(--chrome); }
-.resize-corner { position: absolute; right: 2px; bottom: 2px;
-                 width: 14px; height: 14px; pointer-events: none; }
+        border-left: 1px solid var(--bevel-mid);
+        box-shadow: inset 1px 0 0 #ffffff; }
+.win-folder .sb-v { border-top: 1px solid var(--bevel-mid); }
+.sb-v .sb-btn { flex: 0 0 30px; }
+.sb-v .sb-up { background: url(../icons/beos/sb-v-top.png); }
+.sb-v .sb-down { background: url(../icons/beos/sb-v-bottom.png); }
+.sb-h .sb-btn { flex: 0 0 30px; }
+.sb-h .sb-left { background: url(../icons/beos/sb-h-left.png); }
+.sb-h .sb-right { background: url(../icons/beos/sb-h-right.png); }
+.sb-btn { border: none; }
+.sb-track { background: transparent; }
+.sb-h { height: 13px; box-shadow: inset 0 1px 0 #ffffff;
+        margin-right: 14px; }
+.status-row .sb-h { flex: 1 1 auto; }
+.status-row { height: 14px; background: var(--chrome);
+              border-top: 1px solid var(--bevel-mid); }
+.status-box { font-size: 10px; padding: 1px 0 0 4px; width: 63px;
+              background: var(--chrome); -webkit-font-smoothing: none;
+              word-spacing: -2px;
+              border-right: 1px solid var(--bevel-mid);
+              box-shadow: inset 1px 1px 0 #ffffff; }
+.resize-box { display: none; }
+.resize-corner { position: absolute; right: 0; bottom: 0; z-index: 4;
+                 width: 19px; height: 19px; pointer-events: none; }
+.win-folder .resize-corner { background: url(../icons/beos/corner-tracker.png); }
+.win-doc .resize-corner { background: url(../icons/beos/corner-doc.png); }
 
 /* ---- documents / editor ---- */
+/* Swis721@BeOS renders like 11px Helvetica: x-height 5, line pitch 13.
+   Selectors carry two classes because base.css loads after the skin css. */
 .editor-body { background: var(--content-bg); }
-.editor-text { padding: 2px 4px; font-size: 12px; line-height: 13px; }
-.editor-caret { background: #000; height: 11px; }
+.editor-text { padding: 3px 4px; font-size: 11px; line-height: 13px;
+               word-spacing: 0px; -webkit-font-smoothing: none; }
+.editor-text .editor-line { position: relative; min-height: 13px; }
+.editor-line .editor-caret { position: absolute; left: -1px; top: 0;
+                width: 1px; height: 13px; background: #000; }
 .iframe-clip { right: var(--sb-w); }
 
-/* ---- about dialog ---- */
+/* ---- about dialog ----
+   Geometry measured off the 06 reference: body 501x301 at content (70,90);
+   198px gray left panel + #bdbabd/#636563 divider; 199x60 logo art; keys
+   and values on a 38px rhythm from y159; right panel paragraphs at fixed
+   tops on 13px leading, logo sprites cropped from the reference. */
+.win-about .tab { width: 124px;
+       box-shadow: inset -1px 0 0 rgb(173, 121, 0),
+                   inset 1px 1px 0 #ffff52; }
+.win-about .tab-zoom { display: none; }
+.win-about .tab-title { margin-left: 3px; }
 .win-about .win-body { border: none; }
-.about-beos { display: flex; background: var(--chrome); }
-.about-left { width: 202px; background: var(--chrome);
-              border-right: 1px solid #9c9e9c; padding-bottom: 8px; }
-.about-logo-img { display: block; width: 195px; image-rendering: pixelated; }
-.about-info { padding: 6px 10px; font-size: 12px; }
-.about-key { font-weight: bold; margin-top: 9px; }
-.about-val { margin-top: 1px; }
-.about-right { flex: 1 1 auto; background: var(--content-bg);
-               padding: 6px 6px; overflow: hidden; }
-.about-legal-row { display: flex; gap: 6px; margin-bottom: 9px; }
-.about-legal-logo { flex: 0 0 56px; }
-.about-legal-logo img { max-width: 56px; image-rendering: pixelated; }
-.about-legal-text { font-size: 11px; line-height: 13px; }
+.about-beos { position: relative; display: block; background: #fff;
+              overflow: hidden; font-size: 10px; line-height: 13px;
+              letter-spacing: 0.2px; word-spacing: 0.5px; }
+.about-left { position: absolute; left: 0; top: 0; bottom: 0; width: 199px;
+              background: var(--chrome); border-right: 1px solid #bdbabd;
+              box-shadow: 1px 0 0 var(--chrome-dk); }
+.about-logo-img { display: block; position: absolute; left: 0; top: 0;
+                  width: 199px; height: 60px; max-width: none; z-index: 1;
+                  image-rendering: pixelated; }
+.about-info { position: absolute; left: 0; right: 0; top: 60px;
+              padding: 9px 0 0 6px; transform: translateY(-1px); }
+.about-key { font-weight: bold; font-size: 12px; letter-spacing: 0.2px;
+             margin-top: 8px; position: relative; top: 2px; }
+.about-key:first-child { margin-top: 0; }
+.about-val { margin-top: 4px; }
+.about-right { position: absolute; left: 200px; right: 0; top: 0; bottom: 0;
+               background: var(--content-bg); overflow: hidden; }
+.about-legal-row { position: absolute; left: 0; right: 0; }
+.about-legal-row:nth-of-type(1) { top: 3px; }
+.about-legal-row:nth-of-type(2) { top: 63px; }
+.about-legal-row:nth-of-type(3) { top: 96px; }
+.about-legal-row:nth-of-type(4) { top: 129px; }
+.about-legal-row:nth-of-type(5) { top: 177px; }
+.about-legal-row:nth-of-type(6) { top: 210px; }
+.about-legal-row:nth-of-type(7) { top: 255px; }
+.about-legal-logo { position: absolute; left: 5px; top: 0; }
+.about-legal-logo img { display: block; max-width: none;
+                        image-rendering: pixelated; }
+.about-legal-row:nth-of-type(1) .about-legal-logo img { margin-top: 15px; }
+.about-legal-row:nth-of-type(2) .about-legal-logo img { margin-top: 4px; }
+.about-legal-row:nth-of-type(3) .about-legal-logo img { margin-top: 3px; }
+.about-legal-row:nth-of-type(4) .about-legal-logo img { margin-top: 10px; }
+.about-legal-row:nth-of-type(5) .about-legal-logo img { margin-top: 3px; }
+.about-legal-text { margin-left: 63px; white-space: pre;
+                    transform: translateY(-1px); }
+/* per-row tracking picked by pixel-diff argmin against the reference */
+.about-legal-row:nth-of-type(1) .about-legal-text,
+.about-legal-row:nth-of-type(5) .about-legal-text {
+                    letter-spacing: 0.35px; word-spacing: normal; }
+.about-legal-row:nth-of-type(2) .about-legal-text,
+.about-legal-row:nth-of-type(6) .about-legal-text {
+                    letter-spacing: 0.25px; word-spacing: normal; }
+.about-legal-row:nth-of-type(4) .about-legal-text {
+                    word-spacing: normal; }
 
 /* ---- mobile ---- */
 body.mobile { background: var(--desk-bg); }
