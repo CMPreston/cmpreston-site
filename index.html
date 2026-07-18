@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>C.M. Preston</title>
+<script>
+// Skin bootstrap. Runs before CSS loads so there is no flash of the wrong skin.
+// Order of precedence: ?skin= (used by the verification harness and shareable
+// links) > localStorage > default.
+(function () {
+  var q = new URLSearchParams(location.search);
+  var skin = q.get('skin') || (function () {
+    try { return localStorage.getItem('skin'); } catch (e) { return null; }
+  })() || 'beos';
+  if (skin !== 'beos' && skin !== 'os2') skin = 'beos';
+  window.SKIN = skin;
+  document.documentElement.className = 'skin-' + skin;
+  document.write('<link rel="stylesheet" href="css/' + skin + '.css">');
+})();
+</script>
+<link rel="stylesheet" href="css/base.css">
+</head>
+<body>
+<div id="desktop"></div>
+<script src="js/manifest.js"></script>
+<script src="js/shell.js"></script>
+<script src="js/fixtures.js"></script>
+</body>
+</html>

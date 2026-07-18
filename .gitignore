@@ -1,0 +1,9 @@
+# verification tooling virtualenv
+verify/.venv/
+
+# generated at verification time
+build_screenshots/
+diffs/
+
+# macOS noise
+.DS_Store

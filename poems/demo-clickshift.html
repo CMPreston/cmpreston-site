@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Demonstration — what the door does</title>
+<style>
+
+:root { --poem-font: Georgia, 'Times New Roman', serif; }
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--paper, #fdfdfb); color: #1a1a1a;
+       font-family: var(--poem-font); line-height: 1.6; }
+.poem-wrap { max-width: 42rem; margin: 0 auto; padding: 3rem 1.25rem 6rem; }
+h1.poem-title { font-size: 1.5rem; font-weight: normal;
+                letter-spacing: .02em; margin: 0 0 2.5rem; }
+.poem { white-space: pre-wrap; font-size: 1.05rem; }
+.poem em { font-style: italic; }
+@media (max-width: 480px) { .poem { font-size: 1rem; } }
+
+.ck-trigger { background: none; border: none; padding: 0; margin: 0;
+              font: inherit; color: inherit; cursor: pointer;
+              border-bottom: 1px dotted #8a0f1f; }
+.ck-trigger:hover, .ck-trigger:focus-visible { color: #8a0f1f; }
+.ck-show { display: none; }
+.ck-show.ck-on { display: inline; }
+.ck-hide.ck-on { display: none; }
+.ck-swap .ck-b { display: none; }
+.ck-swap.ck-on .ck-a { display: none; }
+.ck-swap.ck-on .ck-b { display: inline; }
+
+</style>
+</head>
+<body class="">
+<main class="poem-wrap">
+<h1 class="poem-title">Demonstration — what the door does</h1>
+<div class="poem">DEMO POEM (scaffolding, not a C.M. Preston work)
+
+<button type="button" class="ck-trigger" data-ck="door">I closed the door</button>
+        <span class="ck ck-show" data-ck="door">and the room remembered being a box.</span>
+
+The window stayed <span class="ck ck-swap" data-ck="door"><span class="ck-a">open</span><span class="ck-b">shut, in sympathy</span></span>.
+<span class="ck ck-hide" data-ck="door">Outside, a sparrow counted to one hundred.</span>
+
+    <button type="button" class="ck-trigger" data-ck="tide">Say the word <em>tide</em>.</button>
+    <span class="ck ck-show" data-ck="tide">Now the floor is wet.</span>
+    <span class="ck ck-show" data-ck="tide">Now your shoes are an apology.</span>
+
+<strong>Click anything underlined. Click it again to take it back.</strong></div>
+</main>
+<script>
+
+document.querySelectorAll('.ck-trigger').forEach(function (t) {
+  t.addEventListener('click', function () {
+    var id = t.getAttribute('data-ck');
+    document.querySelectorAll('[data-ck="' + CSS.escape(id) + '"]')
+      .forEach(function (el) { el.classList.toggle('ck-on'); });
+  });
+});
+
+</script>
+</body>
+</html>
