@@ -66,6 +66,9 @@ CROPS = [
     ('beos-emulator/beos-04-document.png', (529, 71, 545, 87), 'beos/styled-edit.png', False),
     # Deskbar tray mailbox (over the tray face, no transparency needed)
     ('beos-emulator/beos-01-desktop.png', (525, 26, 542, 42), 'beos/db-mail.png', False),
+    # BeOS alert-state sprites (alert-swapfile.png = swap-file alert capture)
+    ('beos-emulator/alert-swapfile.png', (163, 92, 208, 140), 'beos/alert-icon.png', False),
+    ('beos-emulator/alert-swapfile.png', (524, 71, 540, 87), 'beos/db-alert.png', False),
 ]
 
 # Inactive-tab widgets: cropped from n1.png whose back window sits at the same

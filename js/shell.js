@@ -638,9 +638,11 @@ function buildDeskbar() {
   db.id = 'deskbar';
   var logo = el('div', 'db-logo', db);
   el('img', null, logo).src = iconPath('be-logo');
+  el('div', 'db-sep', db);
   var tray = el('div', 'db-tray', db);
   clockEl = el('span', 'db-clock', tray);
   tickClock();
+  el('div', 'db-sep', db);
   var apps = el('div', 'db-apps', db);
   var t = el('div', 'db-app', apps);
   el('img', null, t).src = iconPath('tracker');
@@ -698,7 +700,51 @@ function openItem(item) {
   if (item.type === 'folder') return openFolder(item);
   if (item.type === 'doc') return openDoc(item);
   if (item.type === 'switcher') return switchSkin();
+  if (item.type === 'trash' && SKIN === 'beos') {
+    return showAlert({
+      text: 'The Trash is empty.',
+      buttons: [{ label: 'OK', def: true }]
+    });
+  }
   return null;
+}
+
+// BeOS-style system alert: gray panel, darker icon stripe at the left,
+// right-aligned buttons, no title tab. opts: {text (\n = line break),
+// buttons: [{label, action, def}], x/y/w/h (fixtures pin these)}
+function showAlert(opts) {
+  var win = { kind: 'alert', title: '' };
+  var node = win.node = el('div', 'win win-alert win-active', desktop);
+  if (opts.w) node.style.width = opts.w + 'px';
+  var aw = opts.w || 317, ah = opts.h || 84;
+  node.style.left = (opts.x != null ? opts.x
+      : Math.round((innerWidth - aw) / 2)) + 'px';
+  node.style.top = (opts.y != null ? opts.y
+      : Math.round(innerHeight * 0.22)) + 'px';
+  if (opts.h) node.style.height = opts.h + 'px';
+  var body = el('div', 'alert-body', node);
+  var stripe = el('div', 'alert-stripe', body);
+  el('img', 'alert-icon', stripe).src = iconPath('alert-icon');
+  var content = el('div', 'alert-content', body);
+  var text = el('div', 'alert-text', content);
+  String(opts.text).split('\n').forEach(function (ln) {
+    el('div', null, text).textContent = ln;
+  });
+  var btns = el('div', 'alert-buttons', content);
+  (opts.buttons || [{ label: 'OK', def: true }]).forEach(function (b) {
+    var btn = el('button', 'beos-button' + (b.def ? ' default-button' : ''), btns);
+    btn.textContent = b.label;
+    btn.addEventListener('click', function () {
+      node.remove();
+      var i = windows.indexOf(win);
+      if (i !== -1) windows.splice(i, 1);
+      if (b.action) b.action();
+    });
+  });
+  node.addEventListener('pointerdown', function () { focusWindow(win); }, true);
+  windows.push(win);
+  focusWindow(win);
+  return win;
 }
 
 function switchSkin() {
@@ -763,6 +809,7 @@ window.SHELL = {
   openFolder: openFolder,
   openDoc: openDoc,
   showAbout: showAbout,
+  showAlert: showAlert,
   showMenu: showMenu,
   desktopMenuItems: desktopMenuItems,
   iconMenuItems: iconMenuItems,

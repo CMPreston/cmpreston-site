@@ -39,6 +39,11 @@ body { background: var(--desk-bg); font-family: var(--ui-font);
 .desk-icon { width: 72px; }
 .icon-label { color: var(--label-fg); font-size: 11px; margin-top: 2px;
               -webkit-font-smoothing: none; }
+/* desktop labels are white in every R5 reference (glyph rows y56..62,
+   Trash 25px / disk label 87px wide => 10px font); grid labels stay black */
+.desk-icon .icon-label { color: #ffffff; font-size: 10px; margin-top: 2px; }
+/* disk sprite is 36x38 native (matches refs at (378,14)); don't squash to 32 */
+.desk-icon .icon-img[src$="disk.png"] { width: 36px; height: 38px; }
 /* in-window icon grid: labels hug one line, centered under a 32px cell */
 .grid-icon .icon-label { align-self: center; width: max-content;
                          white-space: nowrap; font-size: 10px;
@@ -146,21 +151,38 @@ body { background: var(--desk-bg); font-family: var(--ui-font);
                 transform: translateY(-1px); }
 .menu-item u, .menubar-item u { text-decoration: underline; }
 
-/* ---- deskbar ---- */
-#deskbar { position: absolute; top: 0; right: 0; width: 122px;
+/* ---- deskbar ----
+   Geometry measured off reference/beos/06-dialog.png (identical chrome in
+   01-05): box x520..639 (120 wide), border 1px (99,101,99), inner highlight
+   239 top row + left col, right screen-edge col 189. Logo img 110x20 at
+   (524,2). Separator grooves (1px 189 + 1px 239) at y21/22, y45/46 and
+   between app rows (y67/68 in 06). Tray plate x523..636 y24..43: 1px 132
+   border (no bottom), face 189, inset 239 bottom/right highlight; clock
+   glyphs y30..36 right edge x627. App rows 20px: Tracker img at (524,47)
+   (row pads 0/4), later rows pad 2/2 => imgs at +2 (alert img (524,71)). */
+#deskbar { position: absolute; top: 0; right: 0; width: 120px;
            background: var(--chrome);
-           border-left: 1px solid var(--frame-border);
-           border-bottom: 1px solid var(--frame-border); }
-.db-logo { padding: 2px; }
-.db-logo img { display: block; width: 100%; image-rendering: pixelated; }
-.db-tray { text-align: right; padding: 3px 6px; margin: 0 2px;
-           border: 1px solid var(--chrome-lo);
-           box-shadow: inset 1px 1px 0 #cccccc;
-           background: #c6c3c6; font-size: 11px; }
-.db-apps { padding: 2px 0; }
-.db-app { display: flex; align-items: center; gap: 5px; padding: 2px 6px; }
+           border-left: 1px solid var(--chrome-dk);
+           border-bottom: 1px solid var(--chrome-dk);
+           box-shadow: inset 1px 1px 0 #efebef, inset -1px 0 0 #bdbabd; }
+.db-logo { padding: 2px 0 0 3px; }
+.db-logo img { display: block; width: 110px; height: 20px;
+               margin-bottom: -1px; position: relative; z-index: 1;
+               image-rendering: pixelated; }
+.db-sep { height: 2px; border-top: 1px solid #bdbabd; background: #efebef; }
+.db-tray { text-align: right; height: 20px; margin: 1px 3px 1px 2px;
+           padding: 2px 8px 0 6px;
+           border: 1px solid #848284; border-bottom: none;
+           box-shadow: inset -1px -1px 0 #efebef;
+           background: #bdbabd; font-size: 10px; line-height: 13px; }
+.db-apps { padding: 0; }
+.db-app { display: flex; align-items: center; gap: 10px;
+          padding: 2px 6px 2px 3px; }
+.db-app:first-child { padding-top: 0; padding-bottom: 4px; }
+.db-app + .db-app { border-top: 1px solid #bdbabd; padding-top: 3px;
+                    box-shadow: inset 0 1px 0 #efebef; }
 .db-app img { width: 16px; height: 16px; image-rendering: pixelated; }
-.db-app span { font-size: 11px; }
+.db-app span { font-size: 11px; position: relative; top: 3px; }
 
 /* ---- scrollbars ----
    R5 style: DOUBLE arrow pairs at both ends. Caps are sprite crops from the
@@ -272,3 +294,53 @@ body.mobile { background: var(--desk-bg); }
 .m-bar { background: var(--tab-yellow); padding: 10px;
          border-bottom: 2px solid var(--frame-border); font-weight: bold; }
 .m-foot { padding: 14px; color: #dce6f0; font-size: 12px; }
+
+/* ---- system alert (BeOS BAlert look; also used by Trash in production) ----
+   Geometry measured off reference/beos/06-dialog.png: panel 321x88 at
+   (160,89); 5px frame rings, outside->in TL/BR: 156/99, 255/140, 222/222,
+   140/255, 156/156 (corners TR/BL/BR take the BR color, TL takes 156).
+   Content x165..475 y94..171. Stripe 31px (x165..195, 189). Icon 45x48 at
+   abs (163,92) overlapping the corner rings. Text left abs x221, glyph rows
+   103/116 (13px pitch). Buttons top y139: More info 74w, Don't nag 74w
+   (23px tall, y139..161), OK 68w and 24px tall (default buttons are 1px
+   taller, y139..162), 10px gaps, right edge x465. Button skin: face 239,
+   1px 99 border, 239 then 2px white inside TL, 156+222 inside BR. OK ring:
+   2px 239 plate, 1px 189 groove, 1px 99 line (button edge +4). */
+.win-alert { background: var(--chrome);
+             box-shadow:
+               inset -1px -1px 0 var(--bevel-dark),
+               inset 1px 1px 0 var(--bevel-mid),
+               inset -2px -2px 0 var(--bevel-shade),
+               inset 2px 2px 0 #ffffff,
+               inset -3px -3px 0 var(--chrome),
+               inset 3px 3px 0 var(--chrome),
+               inset -4px -4px 0 #ffffff,
+               inset 4px 4px 0 var(--bevel-shade),
+               inset -5px -5px 0 var(--bevel-mid),
+               inset 5px 5px 0 var(--bevel-mid); }
+.alert-body { display: flex; height: 100%; padding: 5px; position: relative; }
+.alert-stripe { flex: 0 0 31px; background: #bdbabd; }
+.alert-icon { position: absolute; left: 3px; top: 3px; width: 45px;
+              height: 48px; image-rendering: pixelated; }
+.alert-content { flex: 1 1 auto; min-width: 0; display: flex;
+                 flex-direction: column; padding: 6px 10px 10px 25px; }
+.alert-text { font-size: 11px; line-height: 13px; margin-top: 1px; }
+.alert-text > div { white-space: nowrap; }
+.alert-buttons { margin-top: auto; display: flex; justify-content: flex-end;
+                 align-items: flex-start; gap: 10px; }
+.beos-button { font: inherit; font-size: 11px; min-width: 68px; height: 23px;
+               padding: 3px 9px 0;
+               background: #efebef; border: 1px solid var(--bevel-dark);
+               border-radius: 2px;
+               box-shadow: inset 1px 1px 0 #efebef,
+                           inset -1px -1px 0 var(--bevel-mid),
+                           inset -2px -2px 0 var(--chrome),
+                           inset 3px 3px 0 #ffffff; }
+.beos-button:active { box-shadow: inset 1px 1px 0 var(--bevel-shade); }
+.default-button { box-shadow: inset 1px 1px 0 #efebef,
+                              inset -1px -1px 0 var(--bevel-mid),
+                              inset -2px -2px 0 var(--chrome),
+                              inset 3px 3px 0 #ffffff,
+                              0 0 0 2px #efebef,
+                              0 0 0 3px #bdbabd;
+                  outline: 1px solid var(--bevel-dark); outline-offset: 3px; }
