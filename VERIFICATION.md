@@ -113,10 +113,20 @@ reporting and PCI/chipset probing. The kernel's own trap handler prints
 the dump, so media corruption is effectively excluded (the failing kernel
 loads intact and executes). Conclusion: a TCG-level incompatibility with
 this kernel generation; consistent with community experience that OS/2
-needs KVM or cycle-accurate emulators (86Box). Next step is gated on the
-operator: an 86Box ROM set (operator-supplied, same provenance rule as
-all OS media) enables the reference-quality path; otherwise Warp 4 falls
-back to archive screenshots.
+needs KVM or cycle-accurate emulators.
+
+**Resolution: 86Box.** At the operator's explicit direction, the 86Box
+v6.0 firmware collection (github.com/86Box/roms, the project's official
+companion repo of vendor BIOS dumps — provenance copy kept beside the OS
+media) was fetched and installed. The working rig: 86Box v6.0 build 9001
+(native arm64 Linux, no-dynarec interpreter build) inside a Debian
+container — Xvfb display, xdotool input, ImageMagick capture, everything
+driven via docker exec with zero host GUI involvement. Emulated machine:
+ASUS P/I-P55T2P4 (i430HX, Award 4.51PG BIOS), Pentium 133, 64MB RAM,
+S3 Trio64V+ (Cardex) 4MB, 1.97GB IDE disk, ATAPI CD, 3.5" HD floppy.
+The Warp 4 installer boots cleanly on it — same media that trapped QEMU —
+confirming the TCG diagnosis. Install driven screenshot-by-screenshot;
+rig checked in under verify/os2_rig/ after completion.
 
 ## What the fixtures stage (content-parity honesty)
 

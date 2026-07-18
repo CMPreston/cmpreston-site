@@ -19,6 +19,31 @@ var S = window.SHELL;
 var SKIN = window.SKIN;
 document.documentElement.classList.add('fixture');
 
+// Font experiments (verify/font_experiment.py): ?authfont=swiss|swissaa|tgh
+// swiss   — authentic Swis721 BT extracted from the BeOS volume (local only,
+//           fonts/extracted/ is never committed or deployed)
+// swissaa — same, with grayscale antialiasing like BeOS's renderer
+// tgh     — TeX Gyre Heros, the libre substitute staged for shipping
+var AF = q.get('authfont');
+if (AF) {
+  var css = '';
+  if (AF === 'swiss' || AF === 'swissaa') {
+    css = "@font-face{font-family:'Swis721 BT';src:url('fonts/extracted/Swiss721.ttf')}" +
+          "@font-face{font-family:'Swis721 BT';font-weight:bold;src:url('fonts/extracted/Swiss721_Bold.ttf')}" +
+          ":root{--ui-font:'Swis721 BT',Helvetica,Arial,sans-serif;}";
+  } else if (AF === 'tgh') {
+    css = "@font-face{font-family:'TGH';src:url('fonts/texgyreheros-regular.otf')}" +
+          "@font-face{font-family:'TGH';font-weight:bold;src:url('fonts/texgyreheros-bold.otf')}" +
+          ":root{--ui-font:'TGH',Helvetica,Arial,sans-serif;}";
+  }
+  if (AF === 'swissaa') {
+    css += "body,.menu{-webkit-font-smoothing:antialiased;}";
+  }
+  var fx_style = document.createElement('style');
+  fx_style.textContent = css;
+  document.head.appendChild(fx_style);
+}
+
 function el(tag, cls, parent) {
   var n = document.createElement(tag);
   if (cls) n.className = cls;
@@ -86,11 +111,13 @@ function beosDeskbar(clock) {
   db.id = 'deskbar';
   var logo = el('div', 'db-logo', db);
   el('img', null, logo).src = 'icons/beos/be-logo.png';
+  el('div', 'db-sep', db);
   var tray = el('div', 'db-tray', db);
   var mail = el('img', null, tray);   // tray mailbox, present in every ref
   mail.src = 'icons/beos/db-mail.png';
-  mail.style.cssText = 'position:absolute;left:6px;top:26px';
+  mail.style.cssText = 'position:absolute;left:4px;top:26px';
   el('span', 'db-clock', tray).textContent = clock;
+  el('div', 'db-sep', db);
   var apps = el('div', 'db-apps', db);
   var t = el('div', 'db-app', apps);
   el('img', null, t).src = 'icons/beos/tracker.png';
@@ -100,7 +127,9 @@ function beosDeskbar(clock) {
 
 function beosDesktopIcons() {
   icon({ icon: 'trash', label: 'Trash', x: 4, y: 20, w: 64 });
-  icon({ icon: 'disk', label: 'BeOS 5 Pro Edition', x: 352, y: 14, w: 90 });
+  // w120/x336 keeps the label on one line and centers img+label on x396,
+  // matching the refs (disk art at (378,14), label center 396)
+  icon({ icon: 'disk', label: 'BeOS 5 Pro Edition', x: 336, y: 14, w: 120 });
   icon({ icon: 'folder', label: 'Poems', x: 238, y: 225, w: 64 });
 }
 
@@ -304,7 +333,40 @@ FIXTURES.beos = {
     cursor(422, 240);
   },
 
+  // The dialog state: the swap-file system alert captured over a clean
+  // desktop (reference/raw/beos-emulator/alert-swapfile.png). The About
+  // BeOS replica below ('about-replica') stays as a supplementary state:
+  // it plateaus at ~4.9% on a measured Chromium-vs-BeOS text rasterization
+  // floor (see VERIFICATION.md font experiment) and is reported, not passed.
   '06-dialog': function () {
+    clearDesktop();
+    // pre-Poems desktop: the alert reference was captured before the
+    // Poems folder existed (ref-vs-ref diff confirms only these icons)
+    icon({ icon: 'trash', label: 'Trash', x: 4, y: 20, w: 64 });
+    icon({ icon: 'disk', label: 'BeOS 5 Pro Edition', x: 336, y: 14, w: 120 });
+    beosDeskbar('1:20 PM');
+    var apps = document.querySelector('#deskbar .db-apps');
+    if (apps) {
+      var a = el('div', 'db-app', apps);
+      el('img', null, a).src = 'icons/beos/db-alert.png';
+      el('span', null, a).textContent = 'alert';
+    }
+    var alert = S.showAlert({
+      x: 160, y: 89, w: 321, h: 88,
+      text: 'Not enough free disk space to create a swap file.\nVirtual memory will be disabled.',
+      buttons: [{ label: 'More info' }, { label: "Don't nag" },
+                { label: 'OK', def: true }]
+    });
+    // ref button widths (incl borders): More info 74, Don't nag 74, OK 68;
+    // our font metrics differ, so the fixture pins them
+    var bw = [74, 74, 68];
+    alert.node.querySelectorAll('.beos-button').forEach(function (b, i) {
+      b.style.width = bw[i] + 'px';
+    });
+    cursor(520, 188);
+  },
+
+  'about-replica': function () {
     clearDesktop();
     beosDesktopIcons();
     beosDeskbar('1:55 PM');
