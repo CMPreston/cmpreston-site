@@ -7,3 +7,6 @@ diffs/
 
 # macOS noise
 .DS_Store
+
+# commercial font binaries extracted from BeOS volume — never commit
+fonts/extracted/

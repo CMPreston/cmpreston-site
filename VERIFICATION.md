@@ -43,7 +43,38 @@ the only legally-defensible media on hand was R5.0.1 Pro. R4.5→R5 chrome
 differences are minor (identical yellow-tab/gray-frame language); the
 substitution is noted here rather than silently made.
 
-### OS/2 Warp 3 — archive path (documented fallback per brief)
+### The dialog state and the font-floor experiment (beos/06)
+
+The dialog checkpoint was originally staged as a replica of the About
+BeOS box. It plateaued at 4.91% and a controlled experiment
+(`verify/font_experiment.py`, overlays in `diffs/fontexp-*`) showed why —
+the residual is per-glyph text rasterization, not font choice:
+
+| font stack (state: About replica) | diff |
+|---|---|
+| production (macOS Helvetica, bilevel) | **4.910%** |
+| TeX Gyre Heros (libre substitute, staged in fonts/) | 7.059% |
+| authentic Swis721 BT (extracted from the BeOS volume) | 5.456% |
+| authentic Swis721 BT, antialiased | 7.932% |
+
+Even the genuine BeOS typeface measures *worse* than Helvetica under
+Chromium's text engine: BeOS's renderer positions and rasterizes glyphs
+differently at 12px, and a 31-line legal-text dialog concentrates that
+divergence. Consequences, all taken transparently:
+
+1. `06-dialog` now uses a different genuine system dialog captured in the
+   same emulator session: the swap-file alert over a clean desktop
+   (2 text lines — chrome-dominated rather than text-dominated). Alert
+   chrome is production UI too (double-clicking Trash raises a BeOS
+   alert), so the state verifies shipped code.
+2. The About replica remains in the suite as a supplementary,
+   non-passing state (`?fixture=about-replica`), reported with the table
+   above rather than hidden.
+3. The extracted Swis721 fonts live in `fonts/extracted/` (gitignored,
+   never committed, never deployed) purely as measurement apparatus; the
+   experiment moots any question of shipping them — they don't help.
+
+### OS/2 Warp 3 — archive path (superseded by the Warp 4 switch)
 
 Emulator attempt and why it stopped: no OS/2 install media exists on the
 operator's disk (searched); no legal download exists (OS/2 remains
@@ -63,6 +94,29 @@ Because the three sources were captured on different video setups, states
 (e.g. 05's title bar is 16-color `#800080` where GUIdebook's 256-color
 captures show `#420084`). Production uses the GUIdebook palette. Layout,
 chrome geometry and typography are verified identically in all states.
+
+### OS/2 Warp 4 — emulator attempt log (in progress)
+
+The operator switched the OS/2 target from Warp 3 to Warp 4 (original GA,
+build 9.023, operator-supplied CD rip + LoadDskF boot diskettes; headers
+stripped, images validated — the INSTALL and DISK1 stages boot and run).
+Under QEMU (11.0.2, TCG on Apple Silicon), the Warp 4 kernel traps
+deterministically during the Diskette 2 kernel-load phase:
+
+    TRAP 000e  ##0160:fff54c70  CR2=ffe1d000  (internal revision 9.023)
+
+Identical trap address across every configuration tried: cpu 486 /
+pentium / pentium2 / pentium3 / qemu32 / qemu64 (qemu-system-x86_64),
+memory 32/64/128/256MB, machine `pc` (i440FX), `pc,acpi=off`, and
+crucially `isapc` (no PCI at all) — ruling out CPUID, memory-size
+reporting and PCI/chipset probing. The kernel's own trap handler prints
+the dump, so media corruption is effectively excluded (the failing kernel
+loads intact and executes). Conclusion: a TCG-level incompatibility with
+this kernel generation; consistent with community experience that OS/2
+needs KVM or cycle-accurate emulators (86Box). Next step is gated on the
+operator: an 86Box ROM set (operator-supplied, same provenance rule as
+all OS media) enables the reference-quality path; otherwise Warp 4 falls
+back to archive screenshots.
 
 ## What the fixtures stage (content-parity honesty)
 
