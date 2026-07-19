@@ -71,6 +71,24 @@ body { cursor: default; -webkit-user-select: none; user-select: none; }
 .rz-se { right: -5px; bottom: -5px; width: 20px; height: 20px; cursor: nwse-resize; }
 .rz-sw { left: -5px;  bottom: -5px; width: 16px; height: 16px; cursor: nesw-resize; }
 
+/* draggable desktop icons */
+.desk-icon { cursor: default; }
+.icon-dragging { opacity: 0.7; z-index: 500; }
+
+/* "shut down" screen: full black, one centred line of white terminal text;
+   fixed + flexbox keeps it centred at any browser size. */
+.shutdown-overlay { position: fixed; inset: 0; z-index: 100000; background: #000;
+                    display: flex; align-items: center; justify-content: center; }
+.shutdown-msg { color: #fff; text-align: center; letter-spacing: 2px;
+                font-family: 'Courier New', 'DejaVu Sans Mono', monospace;
+                font-size: clamp(14px, 3.2vw, 26px); }
+
+/* simple About window (both skins): copyright line + OK button */
+.about-simple { padding: 16px 18px 12px; }
+.about-copy { font-size: 13px; line-height: 1.5; }
+.about-simple .about-btnrow { display: flex; justify-content: center;
+                              margin-top: 16px; }
+
 /* ---- mobile fallback ---- */
 body.mobile .m-list { position: absolute; inset: 0; overflow-y: auto; }
 .m-row { display: flex; align-items: center; gap: 10px; padding: 12px; }

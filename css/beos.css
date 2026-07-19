@@ -233,12 +233,15 @@ body { background: var(--desk-bg); font-family: var(--ui-font);
    198px gray left panel + #bdbabd/#636563 divider; 199x60 logo art; keys
    and values on a 38px rhythm from y159; right panel paragraphs at fixed
    tops on 13px leading, logo sprites cropped from the reference. */
-.win-about .tab { width: 124px;
+/* the supplementary about-replica fixture pins this to 124px inline; the live
+   About window lets the tab fit its "About this site" title */
+.win-about .tab { width: fit-content;
        box-shadow: inset -1px 0 0 rgb(173, 121, 0),
                    inset 1px 1px 0 #ffff52; }
 .win-about .tab-zoom { display: none; }
 .win-about .tab-title { margin-left: 3px; }
 .win-about .win-body { border: none; }
+.about-simple { background: var(--chrome); }
 .about-beos { position: relative; display: block; background: #fff;
               overflow: hidden; font-size: 10px; line-height: 13px;
               letter-spacing: 0.2px; word-spacing: 0.5px; }
