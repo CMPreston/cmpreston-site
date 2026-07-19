@@ -95,7 +95,15 @@ Because the three sources were captured on different video setups, states
 captures show `#420084`). Production uses the GUIdebook palette. Layout,
 chrome geometry and typography are verified identically in all states.
 
-### OS/2 Warp 4 — emulator attempt log (in progress)
+### OS/2 Warp 4 — emulator path (achieved via 86Box)
+
+The OS/2 side now uses our own captures of **real OS/2 Warp 4 (GA, build
+9.023) at 640×480×256**, running in 86Box. This supersedes the Warp 3
+archive set above; those images are retained in `reference/raw/os2-warp3/`
+for provenance, but the canonical `reference/os2/` states are Warp 4.
+Full attempt log (why QEMU failed, how 86Box succeeded) below.
+
+
 
 The operator switched the OS/2 target from Warp 3 to Warp 4 (original GA,
 build 9.023, operator-supplied CD rip + LoadDskF boot diskettes; headers
@@ -125,8 +133,28 @@ driven via docker exec with zero host GUI involvement. Emulated machine:
 ASUS P/I-P55T2P4 (i430HX, Award 4.51PG BIOS), Pentium 133, 64MB RAM,
 S3 Trio64V+ (Cardex) 4MB, 1.97GB IDE disk, ATAPI CD, 3.5" HD floppy.
 The Warp 4 installer boots cleanly on it — same media that trapped QEMU —
-confirming the TCG diagnosis. Install driven screenshot-by-screenshot;
-rig checked in under verify/os2_rig/ after completion.
+confirming the TCG diagnosis. Install driven screenshot-by-screenshot
+(three-diskette boot → FDISK → HPFS format → CD copy → WPS), then the S3
+Trio64V+ driver installed via Selective Install to reach **640×480×256**
+(the smooth-gradient title bars this yields matter for the 2% bar; the
+16-colour VGA fallback dithers them). The rig ships under `verify/os2_rig/`:
+a Docker build, an 86Box config, floppy-swap and screenshot/keystroke
+scripts, and — the load-bearing discovery — a keyboard-only control method.
+
+**Headless-mouse note.** 86Box reads the captured pointer as XInput2 *raw*
+device motion, which XTest pointer-warping cannot synthesise under Xvfb,
+and its per-poll recentering cancels rapid relative warps. Precise mouse
+control proved unreliable; the whole install and staging were therefore
+driven **by keyboard** (Window List for focus, type-ahead icon selection,
+menu mnemonics, and an OS/2 command prompt for folder creation and
+launching the editor). This is documented in `verify/os2_rig/RIG.md` so the
+rig is reproducible.
+
+**Backdrop.** The Warp 4 desktop backdrop is a photographic bitmap (the
+"OS/2 WARP" logo art) that CSS cannot reproduce procedurally to 2%. It is
+extracted from the install as an image asset and used directly as the
+skin's `background-image`, so reference and skin match; shipping that IBM
+artwork is an operator-gated decision like the icon sprites.
 
 ## What the fixtures stage (content-parity honesty)
 
