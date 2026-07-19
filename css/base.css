@@ -63,13 +63,13 @@ body { cursor: default; -webkit-user-select: none; user-select: none; }
    top-middle strip, and the two bottom corners; the side strips start below the
    title bar and the top strip is inset so the sysmenu/hide/maximize buttons
    stay clickable. */
-.rz { position: absolute; z-index: 30; }
-.rz-e  { top: 20px; bottom: 10px; right: -3px;  width: 6px;   cursor: ew-resize; }
-.rz-w  { top: 20px; bottom: 10px; left: -3px;   width: 6px;   cursor: ew-resize; }
-.rz-s  { left: 10px; right: 10px; bottom: -3px; height: 6px;  cursor: ns-resize; }
-.rz-n  { left: 92px; right: 62px; top: -1px;    height: 4px;  cursor: ns-resize; }
-.rz-se { right: -3px; bottom: -3px; width: 16px; height: 16px; cursor: nwse-resize; }
-.rz-sw { left: -3px;  bottom: -3px; width: 12px; height: 12px; cursor: nesw-resize; }
+.rz { position: absolute; z-index: 40; }
+.rz-e  { top: 22px; bottom: 8px;  right: -5px;  width: 10px;  cursor: ew-resize; }
+.rz-w  { top: 22px; bottom: 8px;  left: -5px;   width: 10px;  cursor: ew-resize; }
+.rz-s  { left: 8px;  right: 8px;  bottom: -5px; height: 10px; cursor: ns-resize; }
+.rz-n  { left: 96px; right: 64px; top: -4px;    height: 8px;  cursor: ns-resize; }
+.rz-se { right: -5px; bottom: -5px; width: 20px; height: 20px; cursor: nwse-resize; }
+.rz-sw { left: -5px;  bottom: -5px; width: 16px; height: 16px; cursor: nesw-resize; }
 
 /* ---- mobile fallback ---- */
 body.mobile .m-list { position: absolute; inset: 0; overflow-y: auto; }
