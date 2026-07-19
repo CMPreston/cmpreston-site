@@ -368,7 +368,33 @@ function makeIcon(item, parent, cls) {
     selectIcon(d);
     showMenu(iconMenuItems(item), e.clientX, e.clientY);
   });
+  if (cls.indexOf('desk-icon') !== -1) makeIconDraggable(d);
   return d;
+}
+
+// Desktop icons can be dragged to a new spot. A small movement threshold keeps
+// clicks/double-clicks (to open) working; only a real drag repositions.
+function makeIconDraggable(d) {
+  d.addEventListener('pointerdown', function (e) {
+    if (e.button !== 0) return;
+    var sx = e.clientX, sy = e.clientY, ox = d.offsetLeft, oy = d.offsetTop;
+    var dragging = false;
+    function move(ev) {
+      var dx = ev.clientX - sx, dy = ev.clientY - sy;
+      if (!dragging && Math.abs(dx) + Math.abs(dy) < 4) return;
+      dragging = true;
+      d.classList.add('icon-dragging');
+      d.style.left = Math.max(0, ox + dx) + 'px';
+      d.style.top = Math.max(2, oy + dy) + 'px';
+    }
+    function up() {
+      removeEventListener('pointermove', move);
+      removeEventListener('pointerup', up);
+      if (dragging) d.classList.remove('icon-dragging');
+    }
+    addEventListener('pointermove', move);
+    addEventListener('pointerup', up);
+  });
 }
 
 function selectIcon(node) {
@@ -419,8 +445,10 @@ function renderDesktop() {
 function deskSlots(n) {
   var out = [];
   for (var i = 0; i < n; i++) {
+    // BeOS: row block top-left. OS/2: column down the left edge, started below
+    // the 22px WarpCenter bar so the top icon isn't clipped by it.
     if (SKIN === 'beos') out.push({ x: 25 + (i % 3) * 100, y: 8 + Math.floor(i / 3) * 74 });
-    else out.push({ x: 30, y: 12 + i * 64 });
+    else out.push({ x: 30, y: 34 + i * 66 });
   }
   return out;
 }
@@ -441,7 +469,7 @@ function desktopMenuItems() {
       { sep: true },
       { label: '&Refresh', disabled: true },
       { label: 'Loc&kup now', disabled: true },
-      { label: 'Sh&ut down...', disabled: true },
+      { label: 'Sh&ut down...', action: shutdown },
       { label: '&Window list', disabled: true }
     ];
   }
@@ -649,56 +677,33 @@ function buildDocScrollbars(body, fr, win) {
 var aboutWin = null;
 function showAbout() {
   if (aboutWin && windows.indexOf(aboutWin) !== -1) { focusWindow(aboutWin); return aboutWin; }
-  var site = M.site;
-  if (SKIN === 'os2') {
-    aboutWin = createWindow({
-      kind: 'about',
-      title: site.title + ' - Product information',
-      sysIcon: 'sysmenu-doc',
-      w: 351, h: null,
-      content: function (body, win) {
-        body.classList.add('about-os2');
-        var row = el('div', 'about-row', body);
-        el('img', 'about-icon', row).src = iconPath('about');
-        var lines = el('div', 'about-lines', row);
-        site.about_lines.forEach(function (t) { el('div', null, lines).textContent = t; });
-        var btnrow = el('div', 'about-btnrow', body);
-        var ok = el('button', 'os2-button default-button', btnrow);
-        ok.textContent = 'OK';
-        ok.addEventListener('click', function () { closeWindow(win); });
-      }
-    });
-  } else {
-    aboutWin = createWindow({
-      kind: 'about',
-      title: 'About this site',
-      w: 511, h: null,
-      content: function (body) {
-        body.classList.add('about-beos');
-        var left = el('div', 'about-left', body);
-        var logo = el('div', 'about-logo', left);
-        el('span', 'logo-a', logo).textContent = 'CM';
-        el('span', 'logo-b', logo).textContent = 'P';
-        var info = el('div', 'about-info', left);
-        [['Site:', 'cmpreston.com'],
-         ['Form:', 'poems for the browser'],
-         ['Version:', '1.0'],
-         ['Contact:', site.contact]].forEach(function (pair) {
-          el('div', 'about-key', info).textContent = pair[0];
-          el('div', 'about-val', info).textContent = pair[1];
-        });
-        var right = el('div', 'about-right', body);
-        el('p', null, right).textContent =
-          'Poems written for the screen, presented in the manner of the ' +
-          'operating systems that first made the screen feel like a desk.';
-        el('p', null, right).textContent =
-          'Everything here is plain HTML, CSS and JavaScript. No trackers, ' +
-          'no analytics, no fonts phoned home.';
-        el('p', null, right).textContent = 'Mail: ' + site.contact;
-      }
-    });
-  }
+  var COPY = 'All work Copyright C.M. Preston, please direct all ' +
+             'questions to cmpreston0@gmail.com';
+  aboutWin = createWindow({
+    kind: 'about',
+    title: 'About this site',
+    sysIcon: 'sysmenu-doc',
+    w: 320, h: null,
+    content: function (body, win) {
+      body.classList.add('about-simple');
+      el('p', 'about-copy', body).textContent = COPY;
+      var btnrow = el('div', 'about-btnrow', body);
+      var ok = el('button',
+        (SKIN === 'os2' ? 'os2-button' : 'beos-button') + ' default-button', btnrow);
+      ok.textContent = 'OK';
+      ok.addEventListener('click', function () { closeWindow(win); });
+    }
+  });
   return aboutWin;
+}
+
+// Poetic "shut down": the whole screen goes black with one line of white
+// terminal-font text, kept centred at any window size (fixed + flexbox).
+function shutdown() {
+  closeMenus(0);
+  if (document.querySelector('.shutdown-overlay')) return;
+  var ov = el('div', 'shutdown-overlay', document.body);
+  el('div', 'shutdown-msg', ov).textContent = 'LIFE IS NOT A REHEARSAL';
 }
 
 // ---------------------------------------------------------------- chrome bars
@@ -727,7 +732,7 @@ function buildDeskbar() {
       { label: 'Switch to OS/2 Warp' + '…', action: switchSkin },
       { sep: true },
       { label: 'Restart', disabled: true },
-      { label: 'Shut down', disabled: true }
+      { label: 'Shut down', action: shutdown }
     ], r.left - 60, r.bottom);
     e.stopPropagation();
   });
@@ -763,6 +768,22 @@ function buildWarpCenter() {
   bar.draggable = false;
   clockEl = el('span', 'wc-clock', wc);       // right-aligned live readout
   tickClock();
+  // The leftmost OS/2 logo tile is the WarpCenter menu button (as in Warp 4):
+  // a transparent overlay opening the site's actions. Invisible, so the
+  // extracted bar image still matches the reference pixel-for-pixel.
+  var menuBtn = el('button', 'wc-menu-btn', wc);
+  menuBtn.setAttribute('aria-label', 'OS/2 menu');
+  function openWcMenu() {
+    var r = menuBtn.getBoundingClientRect();
+    showMenu([
+      { label: '&About this site' + '…', action: showAbout },
+      { sep: true },
+      { label: 'Switch to &BeOS' + '…', action: switchSkin },
+      { sep: true },
+      { label: 'Sh&ut down', action: shutdown }
+    ], r.left, r.bottom);
+  }
+  menuBtn.addEventListener('click', function (e) { e.stopPropagation(); openWcMenu(); });
   wc.addEventListener('contextmenu', function (e) { e.preventDefault(); });
   return wc;
 }
@@ -888,6 +909,7 @@ window.SHELL = {
   desktopMenuItems: desktopMenuItems,
   iconMenuItems: iconMenuItems,
   switchSkin: switchSkin,
+  shutdown: shutdown,
   createWindow: createWindow,
   makeIcon: makeIcon,
   selectIcon: selectIcon,

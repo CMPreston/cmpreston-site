@@ -33,7 +33,6 @@ window.MANIFEST = {
         }
       ]
     },
-    { "type": "switcher", "icon": "switcher" },
     { "type": "trash", "icon": "trash" }
   ]
 };
