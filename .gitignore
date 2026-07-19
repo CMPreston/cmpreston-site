@@ -10,3 +10,12 @@ diffs/
 
 # commercial font binaries extracted from BeOS volume — never commit
 fonts/extracted/
+
+# OS/2 rig binaries (operator media + vendor firmware — never commit)
+verify/os2_rig/*.img
+verify/os2_rig/*.iso
+verify/os2_rig/*.AppImage
+verify/os2_rig/*.raw
+verify/os2_rig/*.log
+verify/os2_rig/nvr/
+verify/os2_rig/__pycache__/
