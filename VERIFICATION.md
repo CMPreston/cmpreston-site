@@ -133,8 +133,6 @@ archive set above; those images are retained in `reference/raw/os2-warp3/`
 for provenance, but the canonical `reference/os2/` states are Warp 4.
 Full attempt log (why QEMU failed, how 86Box succeeded) below.
 
-
-
 The operator switched the OS/2 target from Warp 3 to Warp 4 (original GA,
 build 9.023, operator-supplied CD rip + LoadDskF boot diskettes; headers
 stripped, images validated — the INSTALL and DISK1 stages boot and run).
@@ -210,6 +208,32 @@ Asset provenance in README.md).
   render no real cursor); states whose reference has an obscured pointer
   (BeOS hides it while typing) place none.
 - Caret: drawn steady; the reference caught it visible.
-- Fonts: captures currently render with the local system stack; libre
-  webfonts (Workplace Sans OFL / TeX Gyre Heros GUST-FL, in `fonts/`) are
-  staged for shipping — wiring them in re-runs the suite.
+- Fonts: BeOS fixtures render with the local system stack; OS/2 UI text
+  uses Workplace Sans (OFL, a WarpSans recreation). The commercial Swiss721
+  extracted from the BeOS volume stays gitignored — it measured *worse*
+  than the substitute (see the font-floor experiment) and is not shipped.
+
+## Deploy & gated actions
+
+Live repo: **github.com/CMPreston/cmpreston-site** (public), pushed as the
+CMPreston identity (verified per the identity firewall before every push —
+active `gh` account CMPreston, commit author `cmpreston0@gmail.com`, never
+the operator's personal account). GitHub Pages builds from `main` / root;
+custom domain `cmpreston.com` set via the committed `CNAME`; `.nojekyll`
+disables Jekyll for this plain static site.
+
+Done: repo created, both skins pushed, Pages built green on every push.
+
+Still gated to the human operator (I do not perform these):
+
+1. **DNS** — point `cmpreston.com` at GitHub Pages at the registrar:
+   four A records (`@` → 185.199.108.153 / .109.153 / .110.153 / .111.153)
+   and, optionally, four AAAA records (`@` → 2606:50c0:8000::153 …8003::153)
+   plus a `www` CNAME → `CMPreston.github.io`. (IPs verified against
+   GitHub's official Pages docs, not quoted from memory.) Until these
+   resolve, the `github.io` URL 301-redirects to the not-yet-live domain;
+   preview locally with `python3 -m http.server`.
+2. **Enforce HTTPS** — after DNS resolves and GitHub provisions the TLS
+   cert, flip on "Enforce HTTPS" (Pages settings, or the API).
+3. **Asset shipping** — the extracted BeOS/OS-2 icon art and the OS/2 WARP
+   backdrop ship as-is by explicit operator decision; no further gate.
