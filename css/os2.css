@@ -1,139 +1,243 @@
-/* OS/2 Warp 3 skin (1994: teal desktop, purple-navy title bars, gray chrome).
-   Every value that the pixel-diff loop tunes lives in :root. */
-:root {
-  --desk-bg: #008284;
-  --title-active: #420084;
-  --title-active-fg: #ffffff;
-  --title-inactive: #cecfce;
-  --title-inactive-fg: #000000;
-  --title-h: 20px;
-  --chrome: #cecfce;
-  --chrome-hi: #ffffff;
-  --chrome-lo: #848284;
-  --chrome-dk: #424142;
-  --content-bg: #ffffff;
-  --desk-label-fg: #000000;
-  --sel-bg: #666699;
-  --sel-fg: #ffffff;
-  --menu-bg: #cecfce;
-  --menu-fg: #000000;
-  --menu-hl-bg: #666699;
-  --menu-hl-fg: #ffffff;
-  --ui-font: 'System Proportional', 'MS Sans Serif', Tahoma, 'Segoe UI', sans-serif;
-  --ui-size: 11px;
+/* OS/2 Warp 4 skin (1996: dithered indigo backdrop, blue gradient title bars,
+   grey Workplace-Shell chrome, WarpCenter bar).
+   Every value the pixel-diff loop tunes lives in :root.
+
+   Dithering note: the desktop backdrop and the active title bars are per-pixel
+   ordered-dithered — un-reproducible by CSS solids to the 2% bar. Those ship as
+   extracted image assets (icons/os2/backdrop.png; icons/os2/title-*.png placed
+   1:1 by the fixtures). Everything below — WarpCenter face, frame bevels, menu
+   bar, menus, dialog chrome — is solid #d6d6d6 and matches in plain CSS. */
+
+@font-face {
+  font-family: 'Workplace Sans';
+  font-style: normal; font-weight: normal;
+  src: url('../fonts/wpsu.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Workplace Sans';
+  font-style: normal; font-weight: bold;
+  src: url('../fonts/wpsub.ttf') format('truetype');
 }
 
-body { background: var(--desk-bg); font-family: var(--ui-font);
-       font-size: var(--ui-size); -webkit-font-smoothing: none; }
+:root {
+  --desk-bg: #0000a1;            /* base blue behind the extracted backdrop */
+  --title-active: #0000f0;       /* CSS-gradient fallback (production) */
+  --title-active-dk: #0d00a8;
+  --title-active-fg: #ffffff;
+  --title-inactive: #818181;     /* solid grey inactive title bar */
+  --title-inactive-fg: #ffffff;
+  --title-h: 16px;               /* blue band height */
+  --chrome: #d6d6d6;             /* Workplace Shell face grey */
+  --chrome-hi: #ffffff;          /* top/left bevel highlight */
+  --chrome-lo: #848484;          /* bottom/right bevel shadow */
+  --chrome-dk: #000000;          /* hard outer edge */
+  --content-bg: #ffffff;
+  --desk-label-fg: #ffffff;      /* desktop icon labels: white on backdrop */
+  --sel-bg: #0000f0;             /* selection / menu highlight (dithered blue) */
+  --sel-fg: #ffffff;
+  --menu-bg: #d6d6d6;
+  --menu-fg: #000000;
+  --menu-hl-bg: #0000f0;
+  --menu-hl-fg: #ffffff;
+  --wc-h: 22px;                  /* WarpCenter bar height */
+  --ui-font: 'Workplace Sans', 'MS Sans Serif', Tahoma, sans-serif;
+  --ui-size: 13px;
+}
 
-/* ---- desktop icons ---- */
+body {
+  background: var(--desk-bg) url('../icons/os2/backdrop.png') top left no-repeat;
+  font-family: var(--ui-font);
+  font-size: var(--ui-size);
+  -webkit-font-smoothing: none;
+}
+
+/* ---- desktop icons: 32x32 art, white label directly on the backdrop ---- */
+.desk-icon { width: 80px; }
+.icon-img { width: 32px; height: 32px; image-rendering: pixelated; }
 .desk-icon .icon-label { color: var(--desk-label-fg); }
-.icon-label { font-size: var(--ui-size); margin-top: 3px; }
+.icon-label { font-size: var(--ui-size); margin-top: 1px; line-height: 1.05; }
 .icon.selected .icon-label span { background: var(--sel-bg); color: var(--sel-fg); }
+.grid-icon .icon-label { color: #000; }   /* in a white folder window */
 
-/* ---- windows ---- */
-.win { background: var(--chrome); border: 1px solid var(--chrome-dk);
-       box-shadow: inset 1px 1px 0 var(--chrome-hi),
-                   inset -1px -1px 0 var(--chrome-lo);
-       padding: 2px; }
-.titlebar { display: flex; align-items: center; height: var(--title-h);
-            background: var(--title-active); }
+/* ---- WarpCenter (top bar) ---- */
+#warpcenter {
+  position: absolute; top: 0; left: 0; width: 100%;
+  height: var(--wc-h); background: var(--chrome);
+  border-bottom: 1px solid #191919;
+  z-index: 9000; overflow: hidden;
+}
+.wc-bar { position: absolute; top: 0; left: 0; height: var(--wc-h);
+          image-rendering: pixelated; display: block; }
+.wc-clock { position: absolute; right: 0; top: 0; width: 84px; height: var(--wc-h);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 12px; color: #000; }
+
+/* ---- windows: grey raised frame, white client ----
+   OS/2 windows are a raised grey panel: a soft top/left edge (#848484) and a
+   hard bottom/right edge (#000), a white top-left highlight + grey bottom-right
+   shadow, then a ~2px face, then the client. The title bar sits flush at the
+   top (no frame strip above it). Measured at the 02 Poems window frame. */
+.win {
+  background: var(--chrome);
+  border-top: 1px solid var(--chrome-lo);
+  border-left: 1px solid var(--chrome-lo);
+  border-right: 1px solid var(--chrome-dk);
+  border-bottom: 1px solid var(--chrome-dk);
+  box-shadow: inset 1px 1px 0 var(--chrome-hi),
+              inset -1px -1px 0 #6a6a6a,
+              inset -2px -2px 0 #c8c8c8;
+  padding: 1px;
+}
+/* The reference client is inset in a ~2px grey face + a sunken bevel. The white
+   client fill (.folder-view when present, else the .folder-body background) is
+   on top, so the face/bevel is painted on whichever carries the white, so it is
+   not hidden. */
+.folder-view, .folder-body, .editor-body {
+  box-shadow:
+    inset  2px  2px 0 var(--chrome), inset -2px -2px 0 var(--chrome),
+    inset  0    1px 0 #f9f9f9, inset  2px 0 0 var(--chrome-lo),
+    inset -2px -2px 0 #c0c0c0;
+}
+.titlebar {
+  position: relative; display: flex; align-items: center;
+  height: 21px;                  /* full title-bar band (top strip+blue+bevel) */
+  background: linear-gradient(90deg, var(--title-active) 0%,
+              var(--title-active-dk) 100%);
+  padding-top: 5px;              /* blue band starts ~5px below the top strip */
+}
 .win:not(.win-active) .titlebar { background: var(--title-inactive); }
-.title { flex: 1 1 auto; color: var(--title-active-fg); font-weight: bold;
-         font-size: 12px; padding-left: 5px; white-space: nowrap;
-         overflow: hidden; }
+/* editor (System Editor) title bar is a 16px band; the focused editor renders
+   in front of the WarpCenter, so the full band shows and covers the bar's
+   lower rows. Its title-img spans the window's y15..31 flush to the top edge. */
+.win-doc .titlebar { height: 16px; padding-top: 4px; }
+.win-doc .title-img { top: -2px; left: -2px; }
+.win-doc .menubar { height: 15px; }
+/* the extracted title-bar rectangle (fixtures) covers the whole bar 1:1,
+   spanning the full window box incl. its 1px border + 1px inset bevel */
+.title-img { position: absolute; left: -2px; top: -2px;
+             image-rendering: pixelated; z-index: 5; pointer-events: none; }
+.title {
+  flex: 1 1 auto; color: var(--title-active-fg); font-weight: normal;
+  font-size: 13px; padding-left: 4px; white-space: nowrap; overflow: hidden;
+}
 .win:not(.win-active) .title { color: var(--title-inactive-fg); }
-.sysmenu { width: 22px; height: var(--title-h); border: 0; background: var(--chrome);
-           display: flex; align-items: center; justify-content: center; }
-.sysmenu img { width: 20px; height: 16px; image-rendering: pixelated; }
-.tb-btn { width: 22px; height: var(--title-h); border: 0; background: var(--chrome);
-          box-shadow: inset 1px 1px 0 var(--chrome-hi),
-                      inset -1px -1px 0 var(--chrome-lo);
-          position: relative; margin-left: 1px; }
-.tb-btn:active { box-shadow: inset 1px 1px 0 var(--chrome-lo); }
-.tb-hide::after { content: ''; position: absolute; inset: 0; margin: auto;
-                  width: 6px; height: 6px; border: 1px solid #000; }
-.tb-max::after { content: ''; position: absolute; inset: 0; margin: auto;
-                 width: 10px; height: 10px; border: 1px solid #000; }
+.sysmenu {
+  width: 14px; height: 16px; border: 0; background: transparent;
+  padding: 0; margin-left: 1px; display: flex; align-items: center;
+}
+.sysmenu img { width: 14px; height: 14px; image-rendering: pixelated; }
+.tb-btns { display: flex; align-items: center; margin-right: 1px; }
+.tb-btns img { height: 14px; image-rendering: pixelated; }
 
 .win-body { background: var(--content-bg); }
 .folder-view { background: var(--content-bg); width: 100%; height: 100%; }
-.grid-icon .icon-label { color: #000; }
+.folder-body, .editor-body { background: var(--content-bg); }
 
-/* ---- menubar & menus ---- */
-.menubar { background: var(--chrome); border-bottom: 1px solid var(--chrome-lo);
-           padding: 2px 0 2px 2px; }
-.menubar-item { padding: 2px 8px; }
-.menubar-item:hover { background: var(--menu-hl-bg); color: var(--menu-hl-fg); }
-.menu { background: var(--menu-bg); border: 1px solid var(--chrome-dk);
-        box-shadow: inset 1px 1px 0 var(--chrome-hi),
-                    inset -1px -1px 0 var(--chrome-lo);
-        padding: 3px; min-width: 160px; }
-.menu-item { padding: 3px 12px; color: var(--menu-fg); }
+/* ---- menu bar (~18px: y56..73 in the reference) ---- */
+.menubar {
+  background: var(--chrome); height: 18px; align-items: center;
+  padding: 0 0 0 12px; gap: 0;
+  box-shadow: inset 0 -1px 0 var(--chrome-lo);   /* dark separator above client */
+}
+.menubar-item { padding: 0 11px 0 0; font-size: 13px; color: #000; line-height: 1; }
+.menubar-item u { text-decoration: underline; }
+.menubar-item:hover { color: #000; }
+
+/* ---- pulldown menus ---- */
+.menu {
+  background: var(--menu-bg);
+  border: 1px solid var(--chrome-dk);
+  box-shadow: inset 1px 1px 0 var(--chrome-hi),
+              inset -1px -1px 0 var(--chrome-lo);
+  padding: 1px; min-width: 132px;
+}
+.menu-item { padding: 2px 10px 2px 12px; color: var(--menu-fg); font-size: 13px; }
 .menu-item.default .menu-label { font-weight: bold; }
-.menu-item:hover:not(.disabled) { background: var(--menu-hl-bg);
-                                  color: var(--menu-hl-fg); }
-.menu-item.disabled { color: #808080; }
-.menu-sep { height: 1px; background: var(--chrome-lo); margin: 3px 2px;
-            box-shadow: 0 1px 0 var(--chrome-hi); }
-.menu-arrow::after { content: ''; display: inline-block; width: 0; height: 0;
-        border-left: 5px solid #000; border-top: 4px solid transparent;
-        border-bottom: 4px solid transparent; }
+.menu-item:hover:not(.disabled),
+.menu-item.forced-hover:not(.disabled) {
+  background: var(--menu-hl-bg); color: var(--menu-hl-fg);
+}
+.menu-item.disabled { color: #848484; }
+.menu-sep { height: 2px; margin: 2px 1px;
+            border-top: 1px solid var(--chrome-lo);
+            border-bottom: 1px solid var(--chrome-hi); }
+.menu-arrow { margin-left: 14px; }
+.menu-arrow::after {
+  content: ''; display: inline-block; width: 0; height: 0;
+  border-left: 4px solid currentColor;
+  border-top: 4px solid transparent; border-bottom: 4px solid transparent;
+}
+.menu-accel { margin-left: 20px; }
 
-/* ---- LaunchPad ---- */
-#launchpad { position: absolute; left: 50%; transform: translateX(-50%);
-             bottom: 20px; display: flex; align-items: center;
-             background: var(--chrome); border: 1px solid var(--chrome-dk);
-             box-shadow: inset 1px 1px 0 var(--chrome-hi),
-                         inset -1px -1px 0 var(--chrome-lo);
-             padding: 8px 10px; gap: 10px; }
-.lp-textcols { display: flex; gap: 6px; }
-.lp-col { display: flex; flex-direction: column; gap: 6px; }
-.lp-textbtn { font: inherit; padding: 3px 10px; min-width: 76px;
-              background: var(--chrome); border: 1px solid var(--chrome-dk);
-              box-shadow: inset 1px 1px 0 var(--chrome-hi),
-                          inset -1px -1px 0 var(--chrome-lo); }
-.lp-textbtn:active { box-shadow: inset 1px 1px 0 var(--chrome-lo); }
-.lp-icons { display: flex; gap: 6px; }
-.lp-cell { display: flex; flex-direction: column; align-items: center; gap: 2px; }
-.lp-drawer { width: 34px; height: 7px; border: 1px solid var(--chrome-lo);
-             background: var(--chrome);
-             box-shadow: inset 1px 1px 0 var(--chrome-hi); }
-.lp-iconbtn { width: 40px; height: 36px; background: var(--chrome);
-              border: 1px solid var(--chrome-dk);
-              box-shadow: inset 1px 1px 0 var(--chrome-hi),
-                          inset -1px -1px 0 var(--chrome-lo); }
-.lp-iconbtn img { width: 32px; height: 26px; image-rendering: pixelated; }
-
-/* ---- documents ---- */
-.iframe-clip { right: 15px; bottom: 15px; }
+/* ---- scrollbars (folder + document furniture) ---- */
 .sb { background: var(--chrome); }
-.sb-v { position: absolute; top: 0; right: 0; bottom: 15px; width: 15px;
-        display: flex; flex-direction: column;
-        border-left: 1px solid var(--chrome-lo); }
-.sb-h { position: absolute; left: 0; right: 15px; bottom: 0; height: 15px;
-        border-top: 1px solid var(--chrome-lo); }
-.sb-btn { height: 15px; background: var(--chrome);
-          border: 1px solid var(--chrome-lo);
-          box-shadow: inset 1px 1px 0 var(--chrome-hi); }
-.sb-track { flex: 1 1 auto; position: relative; background: #b0b0b0; }
-.sb-thumb { position: absolute; left: 1px; right: 1px;
-            background: var(--chrome); border: 1px solid var(--chrome-lo);
-            box-shadow: inset 1px 1px 0 var(--chrome-hi); }
+.sb-v { position: absolute; top: 0; right: 0; bottom: 16px; width: 16px;
+        display: flex; flex-direction: column; }
+.sb-h { position: absolute; left: 0; right: 16px; bottom: 0; height: 16px; }
+.sb-btn { width: 16px; height: 16px; background: var(--chrome);
+          border: 1px solid var(--chrome-dk);
+          box-shadow: inset 1px 1px 0 var(--chrome-hi),
+                      inset -1px -1px 0 var(--chrome-lo); }
+/* OS/2 scrollbar track: in the fixtures the content fits, so the thumb fills
+   the track — render it as a raised grey face (matches the reference). */
+.sb-track { flex: 1 1 auto; position: relative; background: var(--chrome);
+            box-shadow: inset 1px 1px 0 var(--chrome-hi),
+                        inset -1px -1px 0 var(--chrome-lo); }
+.sb-track-h { height: 16px; }
+.sb-thumb { position: absolute; left: 0; right: 0;
+            background: var(--chrome); border: 1px solid var(--chrome-dk);
+            box-shadow: inset 1px 1px 0 var(--chrome-hi),
+                        inset -1px -1px 0 var(--chrome-lo); }
+.iframe-clip { right: 16px; bottom: 16px; }
 
-/* ---- about dialog ---- */
-.about-os2 { background: var(--chrome); padding: 8px 0 10px; }
+/* ---- editor (System Editor) client ---- */
+.editor-body { position: relative; }
+.editor-text { position: absolute; left: 7px; top: 8px; right: 17px; bottom: 17px;
+               color: #000; font-size: 13px; line-height: 16px; }
+.editor-line { white-space: pre; height: 16px; }
+.editor-caret { display: inline-block; width: 2px; height: 13px;
+                background: #000; vertical-align: -2px; }
+
+/* ---- buttons (dialogs) ---- */
+.os2-button {
+  font: inherit; font-size: 13px; min-width: 56px; padding: 2px 10px;
+  background: var(--chrome); color: #000;
+  border: 1px solid var(--chrome-dk);
+  box-shadow: inset 1px 1px 0 var(--chrome-hi),
+              inset -1px -1px 0 var(--chrome-lo);
+}
+.os2-button:active { box-shadow: inset 1px 1px 0 var(--chrome-lo),
+                                 inset -1px -1px 0 var(--chrome-hi); }
+.default-button { border: 2px solid var(--chrome-dk); }
+
+/* ---- Warning / system dialog (metrics measured from 06 reference) ----
+   dialog box x116..470 y58..193; title band y59..74 (image); message lines at
+   y90 & y106; warning icon x141..163 y107..129; buttons y157..180. */
+.dialog-body { background: var(--chrome); position: relative; height: 100%; }
+.dialog-title {
+  position: relative; height: 16px;
+  background: linear-gradient(90deg, var(--title-active), var(--title-active-dk));
+  color: #fff; font-size: 13px; padding-left: 20px; display: flex;
+  align-items: center; overflow: hidden;
+}
+.dialog-title-img { position: absolute; left: -2px; top: -2px;
+                    image-rendering: pixelated; z-index: 3; }
+.dialog-icon { position: absolute; left: 24px; top: 48px;
+               width: 23px; height: 23px; image-rendering: pixelated; }
+.dialog-lines { position: absolute; left: 47px; right: 6px; top: 26px;
+                text-align: center; font-size: 13px; line-height: 16px;
+                color: #000; }
+.dialog-btnrow { position: absolute; left: 0; right: 0; top: 97px;
+                 display: flex; justify-content: center; }
+.dialog-btnrow .os2-button { margin: 0 5px; }
+
+/* ---- about / product-information dialog ---- */
+.about-os2 { background: var(--chrome); padding: 6px 0 10px; }
 .about-row { display: flex; padding: 6px 14px 10px; }
 .about-icon { width: 40px; height: 40px; image-rendering: pixelated;
-              margin: 14px 12px 0 4px; }
-.about-lines { font-size: 12px; line-height: 1.55; }
+              margin: 8px 12px 0 4px; }
+.about-lines { font-size: 13px; line-height: 1.5; color: #000; }
 .about-btnrow { display: flex; justify-content: center; padding-top: 4px; }
-.os2-button { font: inherit; min-width: 60px; padding: 3px 12px;
-              background: var(--chrome); border: 1px solid #000;
-              box-shadow: inset 1px 1px 0 var(--chrome-hi),
-                          inset -1px -1px 0 var(--chrome-lo); }
-.os2-button:active { box-shadow: inset 1px 1px 0 var(--chrome-lo); }
-.default-button { outline: 1px solid #000; outline-offset: 2px; }
 
 /* ---- mobile ---- */
 body.mobile { background: var(--desk-bg); }
@@ -144,4 +248,4 @@ body.mobile { background: var(--desk-bg); }
          color: #000; }
 .m-bar { background: var(--title-active); color: #fff; padding: 10px;
          font-weight: bold; }
-.m-foot { padding: 14px; color: #d0ecec; font-size: 12px; }
+.m-foot { padding: 14px; color: #c8c8ff; font-size: 12px; }

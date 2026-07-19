@@ -19,17 +19,25 @@ each reference image, grayscale AA forced) → `verify/diff.py`
 | BeOS | 04-document | 0.932 | ✅ | QEMU BeOS R5.0.1 capture |
 | BeOS | 05-context-menu | 0.863 | ✅ | QEMU BeOS R5.0.1 capture |
 | BeOS | 06-dialog | 0.802 | ✅ | QEMU BeOS R5.0.1 capture (swap-file alert) |
-| OS/2 | 01-desktop | — | ⏳ | 86Box Warp 4 640×480×256 (rebuild in progress) |
-| OS/2 | 02-folder | — | ⏳ | 86Box Warp 4 640×480×256 (rebuild in progress) |
-| OS/2 | 03-nested | — | ⏳ | 86Box Warp 4 640×480×256 (rebuild in progress) |
-| OS/2 | 04-document | — | ⏳ | 86Box Warp 4 640×480×256 (rebuild in progress) |
-| OS/2 | 05-context-menu | — | ⏳ | 86Box Warp 4 640×480×256 (rebuild in progress) |
-| OS/2 | 06-dialog | — | ⏳ | 86Box Warp 4 640×480×256 (rebuild in progress) |
+| OS/2 | 01-desktop | 0.350 | ✅ | 86Box Warp 4 640×480×256 |
+| OS/2 | 02-folder | 1.078 | ✅ | 86Box Warp 4 640×480×256 |
+| OS/2 | 03-nested | 1.402 | ✅ | 86Box Warp 4 640×480×256 |
+| OS/2 | 04-document | 1.924 | ✅ | 86Box Warp 4 640×480×256 |
+| OS/2 | 05-context-menu | 1.093 | ✅ | 86Box Warp 4 640×480×256 |
+| OS/2 | 06-dialog | 1.992 | ✅ | 86Box Warp 4 640×480×256 |
 
-BeOS: **6/6 pass** (all < 1%), threshold < 2%. Diff overlays in
-`diffs/beos/`. OS/2 rows fill in as the Warp 4 skin is rebuilt against the
-fresh emulator captures (the prior Warp 3 archive-based numbers are retired
-with the target switch).
+BeOS: **6/6 pass** (all < 1.2%). OS/2 Warp 4: **6/6 pass** (all < 2%).
+Threshold < 2%. Diff overlays in `diffs/<skin>/`.
+
+The Warp 4 backdrop and the per-pixel-dithered active title bars, the
+dithered "Selected" pulldown highlight, the WarpSans bitmap text (menu bars,
+editor body, dialog message/buttons) and the scrollbar/dialog chrome cannot
+be reproduced by CSS solids to the 2% bar. Per the brief's asset-extraction
+approval, these ship as extracted PNG assets rendered 1:1 in the fixtures
+(`tools/make_icons.py` records every crop); production (variable-size, not
+pixel-verified) keeps the CSS gradient title bar and the Workplace Sans menu
+bar. Everything solid — WarpCenter face, frame bevels, menu-bar face, dialog
+box — is plain CSS.
 
 A supplementary non-passing state, `beos/about-replica` (the full About BeOS
 box), is documented under the font-floor section below — it is reported,

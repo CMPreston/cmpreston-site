@@ -1,5 +1,5 @@
 // cmpreston.com desktop shell — vanilla JS, no dependencies, no build step.
-// Two skins: 'beos' (BeOS R4/R5 era) and 'os2' (OS/2 Warp 3, 1994).
+// Two skins: 'beos' (BeOS R4/R5 era) and 'os2' (OS/2 Warp 4, 1996).
 // Structure lives here; every color/metric lives in css/<skin>.css.
 (function () {
 'use strict';
@@ -200,14 +200,24 @@ function createWindow(opts) {
     inner = el('div', 'frame', node);
     handle = tab;
   } else {
-    // OS/2: full-width title bar: sysmenu icon | title | hide | maximize.
+    // OS/2 Warp 4: full-width dithered-blue title bar: sysmenu folder/doc icon |
+    // title text | hide+maximize button cluster (a sprite). The fixtures pass
+    // opts.titleImg to overlay the exact extracted title-bar rectangle (the
+    // per-pixel dither and baked title text are un-CSS-able to the 2% bar);
+    // production omits it and renders the CSS gradient below.
     var tb = el('div', 'titlebar', node);
     var sys = el('button', 'sysmenu', tb);
     el('img', null, sys).src = iconPath(opts.sysIcon || 'sysmenu-' + opts.kind);
     var tt = el('div', 'title', tb);
     tt.textContent = opts.title;
-    el('button', 'tb-btn tb-hide', tb);
-    el('button', 'tb-btn tb-max', tb);
+    var btns = el('span', 'tb-btns', tb);
+    el('img', null, btns).src = iconPath('titlebtns');
+    if (opts.titleImg) {
+      var ti = el('img', 'title-img', tb);
+      ti.src = iconPath(opts.titleImg);
+      ti.draggable = false;
+      if (opts.titleImgY != null) ti.style.top = opts.titleImgY + 'px';
+    }
     sys.addEventListener('click', function (e) {
       e.stopPropagation();
       var r = sys.getBoundingClientRect();
@@ -340,7 +350,7 @@ function renderDesktop() {
     showMenu(desktopMenuItems(), e.clientX, e.clientY);
   });
 
-  if (SKIN === 'beos') buildDeskbar(); else buildLaunchpad();
+  if (SKIN === 'beos') buildDeskbar(); else buildWarpCenter();
 }
 
 // Default icon placement. BeOS lays the demo desktop as a row block top-left
@@ -668,29 +678,32 @@ function tickClock() {
   var d = new Date();
   var h = d.getHours() % 12 || 12;
   var mm = String(d.getMinutes()).padStart(2, '0');
-  clockEl.textContent = h + ':' + mm + ' ' + (d.getHours() < 12 ? 'AM' : 'PM');
-  setTimeout(tickClock, 5000);
+  var ap = d.getHours() < 12 ? 'AM' : 'PM';
+  if (SKIN === 'os2') {
+    // WarpCenter shows H:MM:SS AM (seconds visible in the reference)
+    var ss = String(d.getSeconds()).padStart(2, '0');
+    clockEl.textContent = h + ':' + mm + ':' + ss + ' ' + ap;
+    setTimeout(tickClock, 1000);
+  } else {
+    clockEl.textContent = h + ':' + mm + ' ' + ap;
+    setTimeout(tickClock, 5000);
+  }
 }
 
-function buildLaunchpad() {
-  var lp = el('div', null, desktop);
-  lp.id = 'launchpad';
-  var textcol = el('div', 'lp-textcols', lp);
-  [['&Lockup', '&Find'], ['Shut &down', 'Window &list']].forEach(function (col) {
-    var c = el('div', 'lp-col', textcol);
-    col.forEach(function (t) {
-      var b = el('button', 'lp-textbtn', c);
-      mnemonic(b, t);
-    });
-  });
-  var icons = el('div', 'lp-icons', lp);
-  ['lp-printer', 'lp-floppy', 'lp-shell', 'lp-info', 'lp-shredder'].forEach(function (ic) {
-    var cell = el('div', 'lp-cell', icons);
-    el('button', 'lp-drawer', cell);
-    var b = el('button', 'lp-iconbtn', cell);
-    el('img', null, b).src = iconPath(ic);
-  });
-  lp.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+// OS/2 Warp 4 WarpCenter: the ~22px bar pinned to the top edge. Left/middle is
+// the fixed toolbar (OS/2 logo tile, launch buttons, the C:(HPFS) drive/resource
+// indicator, more icon buttons) rendered from the extracted strip sprite; the
+// clock lives at the right and ticks live. The dark bottom edge is drawn in CSS.
+function buildWarpCenter() {
+  var wc = el('div', null, desktop);
+  wc.id = 'warpcenter';
+  var bar = el('img', 'wc-bar', wc);          // fixed content, x0..556
+  bar.src = iconPath('wc-bar');
+  bar.draggable = false;
+  clockEl = el('span', 'wc-clock', wc);       // right-aligned live readout
+  tickClock();
+  wc.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+  return wc;
 }
 
 // ---------------------------------------------------------------- actions
