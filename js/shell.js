@@ -144,9 +144,76 @@ function focusWindow(win) {
 function closeWindow(win) {
   var i = windows.indexOf(win);
   if (i !== -1) windows.splice(i, 1);
+  var mi = os2Min.indexOf(win);
+  if (mi !== -1) { os2Min.splice(mi, 1); os2LayoutMin(); }
   win.node.remove();
   var last = windows[windows.length - 1];
   if (last) focusWindow(last);
+}
+
+// OS/2 Warp 4 title-bar buttons: Hide (window-shade in place), Minimize (roll
+// up and dock at the bottom-left; click the button again to restore), and
+// Maximize (fill the desktop below the WarpCenter / restore). All reversible.
+function winBody(win) { return win.node.querySelector('.win-body'); }
+function setPanels(win, show) {
+  win.node.querySelectorAll('.win-body, .menubar').forEach(function (e) {
+    e.style.display = show ? '' : 'none';
+  });
+}
+function os2Maximize(win) {
+  var node = win.node, body = winBody(win);
+  focusWindow(win);
+  if (win._max) {
+    node.style.left = win._max.l; node.style.top = win._max.t;
+    node.style.width = win._max.w;
+    if (body) body.style.height = win._max.bh;
+    win._max = null;
+  } else {
+    win._max = { l: node.style.left, t: node.style.top, w: node.style.width,
+                 bh: body ? body.style.height : '' };
+    node.style.left = '0px'; node.style.top = '23px';
+    node.style.width = (innerWidth - 4) + 'px';
+    if (body) {
+      var chrome = node.offsetHeight - body.offsetHeight;
+      body.style.height = Math.max(90, innerHeight - 23 - chrome - 4) + 'px';
+    }
+  }
+}
+function os2Shade(win) {
+  win._shaded = !win._shaded;
+  setPanels(win, !win._shaded);
+  focusWindow(win);
+}
+var os2Min = [];
+function os2Minimize(win) {
+  if (win._min) return os2Unmin(win);
+  var node = win.node, body = winBody(win);
+  win._min = { l: node.style.left, t: node.style.top, w: node.style.width,
+               bh: body ? body.style.height : '', shaded: win._shaded };
+  setPanels(win, false);
+  node.classList.add('win-min');
+  os2Min.push(win);
+  os2LayoutMin();
+  focusWindow(win);
+}
+function os2Unmin(win) {
+  var node = win.node, body = winBody(win), m = win._min;
+  node.classList.remove('win-min');
+  win._shaded = m.shaded;
+  setPanels(win, !win._shaded);
+  node.style.left = m.l; node.style.top = m.t; node.style.width = m.w;
+  if (body && !win._shaded) body.style.height = m.bh;
+  win._min = null;
+  var i = os2Min.indexOf(win); if (i !== -1) os2Min.splice(i, 1);
+  os2LayoutMin();
+  focusWindow(win);
+}
+function os2LayoutMin() {
+  os2Min.forEach(function (w, i) {
+    w.node.style.width = '164px';
+    w.node.style.left = (4 + i * 168) + 'px';
+    w.node.style.top = (innerHeight - w.node.offsetHeight - 2) + 'px';
+  });
 }
 
 function makeDraggable(win, handle) {
@@ -271,7 +338,14 @@ function createWindow(opts) {
     var tt = el('div', 'title', tb);
     tt.textContent = opts.title;
     var btns = el('span', 'tb-btns', tb);
-    el('img', null, btns).src = iconPath('titlebtns');
+    var btnImg = el('img', null, btns);
+    btnImg.src = iconPath('titlebtns');
+    btnImg.draggable = false;
+    // transparent overlays making the Hide/Minimize/Maximize buttons work
+    [['hide', os2Shade], ['min', os2Minimize], ['max', os2Maximize]].forEach(function (pair) {
+      var ob = el('button', 'tb-ovl tb-ovl-' + pair[0], btns);
+      ob.addEventListener('click', function (e) { e.stopPropagation(); pair[1](win); });
+    });
     if (opts.titleImg) {
       var ti = el('img', 'title-img', tb);
       ti.src = iconPath(opts.titleImg);
