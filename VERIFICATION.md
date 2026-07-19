@@ -11,8 +11,30 @@ each reference image, grayscale AA forced) → `verify/diff.py`
 
 ## Results
 
-<!-- RESULTS_TABLE -->
-(pending final run)
+| skin | state | diff % | pass? | reference source |
+|---|---|---:|:---:|---|
+| BeOS | 01-desktop | 0.569 | ✅ | QEMU BeOS R5.0.1 capture |
+| BeOS | 02-folder | 0.340 | ✅ | QEMU BeOS R5.0.1 capture |
+| BeOS | 03-nested | 0.387 | ✅ | QEMU BeOS R5.0.1 capture |
+| BeOS | 04-document | 0.932 | ✅ | QEMU BeOS R5.0.1 capture |
+| BeOS | 05-context-menu | 0.863 | ✅ | QEMU BeOS R5.0.1 capture |
+| BeOS | 06-dialog | 0.802 | ✅ | QEMU BeOS R5.0.1 capture (swap-file alert) |
+| OS/2 | 01-desktop | — | ⏳ | 86Box Warp 4 640×480×256 (rebuild in progress) |
+| OS/2 | 02-folder | — | ⏳ | 86Box Warp 4 640×480×256 (rebuild in progress) |
+| OS/2 | 03-nested | — | ⏳ | 86Box Warp 4 640×480×256 (rebuild in progress) |
+| OS/2 | 04-document | — | ⏳ | 86Box Warp 4 640×480×256 (rebuild in progress) |
+| OS/2 | 05-context-menu | — | ⏳ | 86Box Warp 4 640×480×256 (rebuild in progress) |
+| OS/2 | 06-dialog | — | ⏳ | 86Box Warp 4 640×480×256 (rebuild in progress) |
+
+BeOS: **6/6 pass** (all < 1%), threshold < 2%. Diff overlays in
+`diffs/beos/`. OS/2 rows fill in as the Warp 4 skin is rebuilt against the
+fresh emulator captures (the prior Warp 3 archive-based numbers are retired
+with the target switch).
+
+A supplementary non-passing state, `beos/about-replica` (the full About BeOS
+box), is documented under the font-floor section below — it is reported,
+not counted, because its residual is a measured Chromium-vs-BeOS text
+rasterization floor, not a chrome defect.
 
 ## Reference acquisition paths
 
