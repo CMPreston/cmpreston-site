@@ -183,8 +183,12 @@ function makeResizable(win) {
   var node = win.node;
   var body = node.querySelector('.win-body');
   if (!body) return;
+  // Both skins now resize from the side edges + bottom corners (you asked for
+  // edge-dragging on both). BeOS keeps its signature bottom-right thumb look;
+  // OS/2 additionally gets a top-edge strip. (Historically BeOS R5 resized from
+  // the bottom-right corner only, but edge-drag is the requested behavior.)
   var dirs = SKIN === 'beos'
-    ? ['se']
+    ? ['e', 'w', 's', 'se', 'sw']
     : ['e', 'w', 's', 'n', 'se', 'sw'];
   dirs.forEach(function (dir) {
     var h = el('div', 'rz rz-' + dir, node);
