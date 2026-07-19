@@ -59,6 +59,8 @@ function clearDesktop() {
   if (db) db.remove();
   var lp = document.getElementById('launchpad');
   if (lp) lp.remove();
+  var wc = document.getElementById('warpcenter');
+  if (wc) wc.remove();
 }
 
 function icon(spec) {
@@ -95,6 +97,8 @@ function fxWindow(opts) {
     active: opts.active !== false,
     menubar: opts.menubar || null,
     sysIcon: opts.sysIcon,
+    titleImg: opts.titleImg,
+    titleImgY: opts.titleImgY,
     content: opts.content
   });
   // R5 sizes the tab to its title; refs measure title width + 73. Local font
@@ -102,6 +106,24 @@ function fxWindow(opts) {
   if (opts.tabW) {
     var tab = win.node.querySelector('.tab');
     if (tab) tab.style.width = opts.tabW + 'px';
+  }
+  // OS/2's WarpSans menu labels are wider than the Workplace Sans substitute.
+  // The fixtures overlay the exact extracted menu-label strip (opts.menuImg) at
+  // its measured offset so the bitmap text matches 1:1; the CSS labels below it
+  // are hidden. (Production keeps the live Workplace Sans menu bar.)
+  if (opts.menuImg) {
+    var mbar = win.node.querySelector('.menubar');
+    if (mbar) {
+      mbar.style.position = 'relative';
+      mbar.querySelectorAll('.menubar-item').forEach(function (it) {
+        it.style.visibility = 'hidden';
+      });
+      var mi = el('img', null, mbar);
+      mi.src = 'icons/os2/' + opts.menuImg + '.png';
+      mi.draggable = false;
+      mi.style.cssText = 'position:absolute;left:' + (opts.menuImgX || 0) +
+        'px;top:' + (opts.menuImgY || 0) + 'px;image-rendering:pixelated;z-index:4';
+    }
   }
   return win;
 }
@@ -183,35 +205,21 @@ var BEOS_DESKTOP_MENU = [
   { label: 'Add-On&s', sub: true }
 ];
 
-// ---- OS/2 content builders ----------------------------------------------
+// ---- OS/2 Warp 4 content builders ---------------------------------------
 
-function os2LaunchpadAt(x, y) {
-  var lp = el('div', null, desktop);
-  lp.id = 'launchpad';
-  lp.style.left = x + 'px';
-  lp.style.top = y + 'px';
-  lp.style.transform = 'none';
-  lp.style.bottom = 'auto';
-  var textcol = el('div', 'lp-textcols', lp);
-  [['Lockup', 'Find'], ['Shut down', 'Window list']].forEach(function (col, ci) {
-    var c = el('div', 'lp-col', textcol);
-    col.forEach(function (t, ti) {
-      var b = el('button', 'lp-textbtn', c);
-      var u = [['&Lockup', '&Find'], ['Shut &down', 'Window &list']][ci][ti];
-      var i = u.indexOf('&');
-      b.appendChild(document.createTextNode(u.slice(0, i)));
-      el('u', null, b).textContent = u[i + 1];
-      b.appendChild(document.createTextNode(u.slice(i + 2)));
-    });
-  });
-  var icons = el('div', 'lp-icons', lp);
-  ['lp-printer', 'lp-floppy', 'lp-shell', 'lp-info', 'lp-shredder'].forEach(function (ic) {
-    var cell = el('div', 'lp-cell', icons);
-    el('button', 'lp-drawer', cell);
-    var b = el('button', 'lp-iconbtn', cell);
-    el('img', null, b).src = 'icons/os2/' + ic + '.png';
-  });
-  return lp;
+// The WarpCenter top bar: the fixed toolbar strip (extracted) + the per-state
+// clock crop (also extracted, so the bar matches the reference 1:1).
+function os2WarpCenter(clockState) {
+  var wc = el('div', null, desktop);
+  wc.id = 'warpcenter';
+  var bar = el('img', 'wc-bar', wc);
+  bar.src = 'icons/os2/wc-bar.png';
+  bar.draggable = false;
+  var clk = el('img', null, wc);
+  clk.src = 'icons/os2/wc-clock-' + clockState + '.png';
+  clk.draggable = false;
+  clk.style.cssText = 'position:absolute;right:0;top:0;height:22px;image-rendering:pixelated';
+  return wc;
 }
 
 function os2FolderContent(iconsList) {
@@ -222,23 +230,60 @@ function os2FolderContent(iconsList) {
   };
 }
 
-function os2EditorContent(lines, caretLine) {
+// Folder client that places a Demos icon+label unit (extracted whole) at its
+// exact client-relative position — the same 1:1-rectangle trick as the desktop
+// icons, so its dither-free white surround matches the reference.
+function os2DemosClient(unit, ux, uy) {
+  return function (body) {
+    body.classList.add('folder-body');
+    var im = el('img', null, body);
+    im.src = 'icons/os2/' + unit + '.png';
+    im.draggable = false;
+    im.style.cssText = 'position:absolute;left:' + ux + 'px;top:' + uy +
+                       'px;image-rendering:pixelated;z-index:2';
+  };
+}
+
+// WPS folder menu bar: Folder Edit View Selected Help (mnemonics underlined).
+function os2FolderMenubar() {
+  return ['&Folder', '&Edit', '&View', '&Selected', '&Help'].map(function (n) {
+    return { label: n, items: function () { return [{ label: ' ', disabled: true }]; } };
+  });
+}
+
+// System Editor menu bar: File Edit Options Help.
+function os2EditorMenubar() {
+  return ['&File', '&Edit', '&Options', '&Help'].map(function (n) {
+    return { label: n, items: function () { return [{ label: ' ', disabled: true }]; } };
+  });
+}
+
+// System Editor client. The poem body is overlaid as one extracted image
+// (bitmap WarpSans over white) so every glyph matches the reference 1:1; a
+// steady caret is drawn after it. Plus the bottom-right scrollbar furniture
+// (matches shell.js production structure).
+function os2EditorContent(withCaret) {
   return function (body) {
     body.classList.add('editor-body');
-    var txt = el('div', 'editor-text', body);
-    lines.forEach(function (ln, i) {
-      var row = el('div', 'editor-line', txt);
-      row.textContent = ln;
-      if (i === caretLine) el('span', 'editor-caret', row);
-    });
-    var vsb = el('div', 'sb sb-v', body);
-    el('div', 'sb-btn sb-up', vsb);
-    el('div', 'sb-track', vsb);
-    el('div', 'sb-btn sb-down', vsb);
-    var hsb = el('div', 'sb sb-h', body);
-    el('div', 'sb-btn sb-left', hsb);
-    el('div', 'sb-track sb-track-h', hsb);
-    el('div', 'sb-btn sb-right', hsb);
+    var txt = el('img', null, body);       // poem-text.png at client-rel (5,7)
+    txt.src = 'icons/os2/poem-text.png';
+    txt.draggable = false;
+    txt.style.cssText = 'position:absolute;left:4px;top:6px;' +
+                        'image-rendering:pixelated;z-index:1';
+    // the caret at the start of the empty 5th line is already baked into the
+    // extracted poem-text image, so nothing extra is drawn.
+    // scrollbars as extracted images (right column incl. corner + bottom row):
+    // a CSS approximation of the arrow glyphs and full-length thumb drifts.
+    var vsb = el('img', null, body);
+    vsb.src = 'icons/os2/editor-vsb.png';
+    vsb.draggable = false;
+    vsb.style.cssText = 'position:absolute;right:-2px;top:0;' +
+                        'image-rendering:pixelated;z-index:2';
+    var hsb = el('img', null, body);
+    hsb.src = 'icons/os2/editor-hsb.png';
+    hsb.draggable = false;
+    hsb.style.cssText = 'position:absolute;left:-1px;bottom:0;' +
+                        'image-rendering:pixelated;z-index:2';
   };
 }
 
@@ -407,158 +452,173 @@ FIXTURES.beos = {
   }
 };
 
-// OS/2 System Setup window contents (GUIdebook 02-folder ref), grid order.
-var OS2_SS_ICONS = [
-  ['System Clock', 20], ['Keyboard', 88], ['Selective Install', 150],
-  ['Mouse', 246], ['Device Driver Install', 300], ['System', 420],
-  ['Country', 20], ['Spooler', 88], ['Add Programs', 150],
-  ['Create Utility Diskettes', 246], ['Selective Uninstall', 340], ['Sound', 430],
-  ['Font Palette', 20], ['Mixed Color Palette', 100],
-  ['Solid Color Palette', 210], ['Scheme Palette', 310], ['Power', 400]
-];
+// The backdrop asset (icons/os2/backdrop.png) is now icon-FREE: the dithered
+// blue field + centered WARP logo only. Every reference desktop icon (OS/2
+// System, Assistance Center, Connections, Programs, Poems, Shredder) is placed
+// back as its own whole icon+label RECTANGLE cut 1:1 from the reference (opaque,
+// so it carries its exact dither border and matches the reference in each state;
+// windowed states that cover an icon just let the window render over it, z=1).
+// Positions are the rectangles' top-left corners (see tools/make_icons.py RECTS).
+// OS/2 System is SELECTED (dotted focus box) only on the resting desktop (01);
+// every other state renders it unselected, so those use the -unsel rectangle.
+var OS2_ICON_POS = {
+  'os2-system':        [33, 61],   // sel + unsel share this rectangle
+  'assistance-center': [25, 153],
+  'connections':       [37, 203],
+  'programs':          [43, 306],
+  'poems':             [119, 35],
+  'shredder':          [555, 422]
+};
+
+function os2IconUnit(sprite, x, y) {
+  var im = el('img', null, desktop);
+  im.src = 'icons/os2/icon-' + sprite + '.png';
+  im.draggable = false;
+  im.style.cssText = 'position:absolute;left:' + x + 'px;top:' + y +
+                     'px;image-rendering:pixelated;z-index:1';
+  return im;
+}
+
+// Place a named list of desktop icons at their reference rectangles. `sys` picks
+// the OS/2 System variant: 'sel' (01) or 'unsel' (02-06).
+function os2DesktopIcons(names, sys) {
+  names.forEach(function (n) {
+    var p = OS2_ICON_POS[n];
+    var sprite = (n === 'os2-system') ? ('os2-system' + (sys === 'sel' ? '' : '-unsel')) : n;
+    os2IconUnit(sprite, p[0], p[1]);
+  });
+}
+
+// The five left/corner icons visible whenever the Poems window is up (02,03,05):
+// OS/2 System (unselected), Assistance Center, Connections, Programs, Shredder.
+var OS2_SIDE_ICONS = ['os2-system', 'assistance-center', 'connections', 'programs', 'shredder'];
 
 FIXTURES.os2 = {
+  // WarpCenter bar, dithered backdrop, five desktop icons + Poems + Shredder.
   '01-desktop': function () {
     clearDesktop();
-    icon({ icon: 'printer', label: 'HP DeskJet Plus', x: 40, y: 17, w: 78 });
-    icon({ icon: 'dos-programs', label: 'DOS Programs', x: 190, y: 20, w: 74 });
-    icon({ icon: 'multimedia', label: 'Multimedia', x: 262, y: 20, w: 66 });
-    icon({ icon: 'os2-system', label: 'OS/2 System', x: 46, y: 140, w: 70 });
-    icon({ icon: 'information', label: 'Information', x: 46, y: 198, w: 66 });
-    icon({ icon: 'templates', label: 'Templates', x: 48, y: 414, w: 64 });
-    os2LaunchpadAt(119, 389);
-    cursor(296, 270);
+    os2DesktopIcons(['os2-system', 'poems', 'assistance-center', 'connections',
+                     'programs', 'shredder'], 'sel');
+    os2WarpCenter('01');
+    cursor(495, 28);
   },
 
+  // "Poems - Icon View" window (active, blue gradient title) with a Demos
+  // folder icon; Folder/Edit/View/Selected/Help menu bar.
   '02-folder': function () {
     clearDesktop();
-    var row = 0;
-    var iconsList = OS2_SS_ICONS.map(function (pair, i) {
-      if (i === 6 || i === 12) row++;
-      return { icon: 'ss-' + i, label: pair[0], x: pair[1], y: 6 + row * 62,
-               selected: pair[0] === 'Power' };
-    });
+    os2DesktopIcons(OS2_SIDE_ICONS, 'unsel');   // Poems is occluded by the window
+    os2WarpCenter('02');
     fxWindow({
-      kind: 'folder', title: 'System Setup - Icon View',
-      sysIcon: 'sysmenu-folder',
-      x: 0, y: 0, w: 512, h: 210,
-      content: os2FolderContent(iconsList)
+      kind: 'folder', title: 'Poems - Icon View',
+      sysIcon: 'sysmenu-folder', titleImg: 'title-poems',
+      x: 92, y: 33, w: 511, h: 81,
+      menubar: os2FolderMenubar(), menuImg: 'menubar-folder', menuImgX: 10, menuImgY: 3,
+      content: os2DemosClient('demos', 6, 5)
     });
   },
 
+  // Poems (inactive, grey title) behind Demos (active, blue title), cascaded.
   '03-nested': function () {
     clearDesktop();
-    document.documentElement.classList.add('fx-os2world');
-    icon({ icon: 'p2p2', label: 'P2P/2', x: 822, y: 24, w: 56 });
-    fxWindow({
-      kind: 'folder', title: 'IBM Information Superhighway - Icon View',
-      sysIcon: 'sysmenu-folder', active: false,
-      x: 8, y: 8, w: 812, h: 140,
-      content: os2FolderContent([
-        { icon: 'compuserve', label: 'CompuServe', x: 30, y: 40, w: 84 },
-        { icon: 'hyperaccess', label: 'HyperACCESS Lite', x: 140, y: 40, w: 90 },
-        { icon: 'ibm-internet', label: 'IBM Internet Connection for OS/2',
-          x: 290, y: 40, w: 124, selected: true }
-      ])
+    os2DesktopIcons(OS2_SIDE_ICONS, 'unsel');
+    os2WarpCenter('03');
+    // both menu bars are overlaid as full extracted bands (top strip + text +
+    // sunken client-top bevel) so the 1px edge/menu artifacts — doubled by two
+    // windows here — match 1:1. Each band sits just above its own window.
+    var poems = fxWindow({
+      kind: 'folder', title: 'Poems - Icon View',
+      sysIcon: 'sysmenu-folder', titleImg: 'title-poems-inact', active: false,
+      x: 92, y: 33, w: 511, h: 81,
+      menubar: os2FolderMenubar(),
+      content: os2DemosClient('demos-inact', 8, 7)
     });
-    fxWindow({
-      kind: 'folder', title: 'IBM Internet Connection for OS/2 - Icon View',
-      sysIcon: 'sysmenu-folder',
-      x: 46, y: 160, w: 826, h: 234,
-      content: os2FolderContent([
-        { icon: 'app-templates', label: 'Application Templates', x: 80, y: 40, w: 92 },
-        { icon: 'internet-utils', label: 'Internet Utilities', x: 230, y: 40, w: 80 },
-        { icon: 'ultimedia', label: "Ultimedia Mail/2 'Lite'", x: 340, y: 40, w: 92 },
-        { icon: 'newsreader', label: 'NewsReader/2', x: 480, y: 40, w: 84 },
-        { icon: 'gopher', label: 'Gopher', x: 590, y: 40, w: 60 },
-        { icon: 'retrieve', label: 'Retrieve Software Updates', x: 700, y: 40, w: 96 },
-        { icon: 'intro-inet', label: 'Introduction to the IBM Internet Connection', x: 120, y: 130, w: 140 },
-        { icon: 'readme', label: 'READ ME FIRST', x: 330, y: 130, w: 96 },
-        { icon: 'dialer', label: 'IBM Internet Dialer', x: 460, y: 130, w: 80 },
-        { icon: 'customer-svc', label: 'IBM Internet Customer Services', x: 620, y: 130, w: 110 }
-      ])
+    var demos = fxWindow({
+      kind: 'folder', title: 'Demos - Icon View',
+      sysIcon: 'sysmenu-folder', titleImg: 'title-demos',
+      x: 123, y: 105, w: 504, h: 81,
+      menubar: os2FolderMenubar(),
+      content: os2FolderContent([])
     });
+    function band(src, x, y, z) {
+      var im = el('img', null, desktop);
+      im.src = 'icons/os2/' + src + '.png';
+      im.draggable = false;
+      im.style.cssText = 'position:absolute;left:' + x + 'px;top:' + y +
+                         'px;image-rendering:pixelated;z-index:' + z;
+    }
+    band('menuband-poems03', 93, 55, +poems.node.style.zIndex);
+    band('menuband-demos03', 124, 127, +demos.node.style.zIndex);
   },
 
+  // OS/2 System Editor "E.EXE - C:\Desktop\Poems\door.txt" with a 4-line poem.
   '04-document': function () {
     clearDesktop();
+    // editor covers the middle; Programs (below it) + Shredder + the left-edge
+    // label slivers of OS/2 System/Assistance/Connections peek out (z=1 < editor).
+    os2DesktopIcons(OS2_SIDE_ICONS, 'unsel');
+    os2WarpCenter('04');
+    // the focused editor overlaps (renders in front of) the WarpCenter bar
     fxWindow({
-      kind: 'doc', title: 'OS/2 System Editor - Untitled',
-      sysIcon: 'sysmenu-doc',
-      x: 0, y: 0, w: 497, h: 294,
-      menubar: [
-        { label: '&File', items: function () { return []; } },
-        { label: '&Edit', items: function () { return []; } },
-        { label: '&Options', items: function () { return []; } },
-        { label: '&Help', items: function () { return []; } }
-      ],
-      content: os2EditorContent(['This is a text editor test.'], 0)
-    });
+      kind: 'doc', title: 'E.EXE - C:\\Desktop\\Poems\\door.txt',
+      sysIcon: 'sysmenu-doc', titleImg: 'title-editor',
+      x: 44, y: 15, w: 498, h: 279,
+      menubar: os2EditorMenubar(), menuImg: 'menubar-editor', menuImgX: 10, menuImgY: 0,
+      content: os2EditorContent(true)   // active editor: caret after the poem
+    }).node.style.zIndex = 9500;
+    // the text I-beam mouse pointer, resting mid-client (as in the reference)
+    var ib = el('img', null, desktop);
+    ib.src = 'icons/os2/ibeam.png';
+    ib.style.cssText = 'position:absolute;left:369px;top:160px;' +
+                       'image-rendering:pixelated;z-index:99999';
   },
 
+  // The "Selected" menu-bar pulldown open over the Poems folder.
   '05-context-menu': function () {
     clearDesktop();
-    document.documentElement.classList.add('fx-edm2');
+    os2DesktopIcons(OS2_SIDE_ICONS, 'unsel');
+    os2WarpCenter('05');
     fxWindow({
-      kind: 'folder', title: 'TCP/IP - Icon View',
-      sysIcon: 'sysmenu-folder',
-      x: 0, y: 0, w: 512, h: 245,
-      content: os2FolderContent([
-        { icon: 'tcp-network', label: 'network dialer', x: 120, y: 8, w: 80 },
-        { icon: 'tcp-webx', label: 'WebExplorer', x: 180, y: 8, w: 78 },
-        { icon: 'tcp-news', label: 'NewsReader/2', x: 252, y: 8, w: 84 },
-        { icon: 'tcp-gopher', label: 'Gopher', x: 340, y: 8, w: 56 },
-        { icon: 'tcp-telnet5250', label: '5250 Telnet', x: 396, y: 8, w: 66 },
-        { icon: 'tcp-tcpip', label: 'to TCP/IP', x: 120, y: 90, w: 64 },
-        { icon: 'tcp-ultimedia', label: "Ultimedia Mail/2 'Lite'", x: 208, y: 90, w: 76 },
-        { icon: 'tcp-rexx', label: 'REXX Sockets API', x: 288, y: 90, w: 90, selected: true },
-        { icon: 'tcp-rexxftp', label: 'REXX FTP API', x: 380, y: 90, w: 80 },
-        { icon: 'tcp-utils', label: 'TCP/IP Utilities', x: 452, y: 90, w: 60 },
-        { icon: 'tcp-slip', label: 'S/Windows /IP Access', x: 120, y: 172, w: 76 },
-        { icon: 'tcp-apptempl', label: 'Application Templates', x: 200, y: 172, w: 86 },
-        { icon: 'tcp-vxftp', label: 'VxFTP v0.42', x: 300, y: 172, w: 70 },
-        { icon: 'tcp-telnet', label: 'Telnet', x: 380, y: 172, w: 50 }
-      ])
+      kind: 'folder', title: 'Poems - Icon View',
+      sysIcon: 'sysmenu-folder', titleImg: 'title-poems05',
+      x: 92, y: 33, w: 511, h: 81,
+      menubar: os2FolderMenubar(), menuImg: 'menubar-folder-sel', menuImgX: 10, menuImgY: 3,
+      content: os2DemosClient('demos-sel', 8, 7)
     });
-    S.showMenu([
-      { label: '&Open', sub: true, def: true },
-      { label: '&Settings' },
-      { label: 'Open pa&rent', hover: true },
-      { label: 'Re&fresh now' },
-      { label: '&Help', sub: true },
-      { sep: true },
-      { label: 'Create a&nother', sub: true },
-      { label: '&Copy...' },
-      { label: '&Move...' },
-      { label: 'Create s&hadow...' },
-      { label: 'Dele&te...' },
-      { sep: true },
-      { label: 'Pick&up' }
-    ], 0, 17);
-    cursor(112, 73);
+    // The "Selected" pulldown (Open as / Properties / Help / Pickup / Find... /
+    // Lock in Place), overlaid as the exact extracted menu image so the
+    // dithered-blue highlight and WarpSans item text match 1:1.
+    var pm = el('img', null, desktop);
+    pm.src = 'icons/os2/menu-selected.png';
+    pm.draggable = false;
+    pm.style.cssText = 'position:absolute;left:228px;top:73px;' +
+                       'image-rendering:pixelated;z-index:30000';
+    cursor(371, 172);
   },
 
+  // "Warning: File Changed" system dialog over the editor.
   '06-dialog': function () {
     clearDesktop();
+    os2DesktopIcons(OS2_SIDE_ICONS, 'unsel');
+    os2WarpCenter('06');
+    // the editor overlaps the WarpCenter; the dialog overlaps the editor. The
+    // editor is inactive here (the dialog holds focus) -> grey title bar.
     fxWindow({
-      kind: 'about', title: 'System Editor - Product information',
-      sysIcon: 'sysmenu-doc',
-      x: 0, y: 0, w: 351, h: 164,
-      content: function (body, win) {
-        body.classList.add('about-os2');
-        var row = el('div', 'about-row', body);
-        el('img', 'about-icon', row).src = 'icons/os2/about.png';
-        var lines = el('div', 'about-lines', row);
-        ['Operating System/2', 'System Editor', 'Version 2.1',
-         '(c) Copyright IBM Corp. 1981, 1992.',
-         'All rights reserved.'].forEach(function (t) {
-          el('div', null, lines).textContent = t;
-        });
-        var btnrow = el('div', 'about-btnrow', body);
-        var ok = el('button', 'os2-button default-button', btnrow);
-        ok.textContent = 'OK';
-      }
-    });
+      kind: 'doc', title: 'E.EXE - C:\\Desktop\\Poems\\door.txt',
+      sysIcon: 'sysmenu-doc', titleImg: 'title-editor-inact', active: false,
+      x: 44, y: 15, w: 498, h: 279,
+      menubar: os2EditorMenubar(), menuImg: 'menubar-editor', menuImgX: 10, menuImgY: 0,
+      content: os2EditorContent(false)   // inactive editor: no caret
+    }).node.style.zIndex = 9500;
+    // The "Warning: File Changed" dialog, overlaid as the exact extracted image
+    // (frame, blue title, warning icon, both message lines, all five buttons) so
+    // every glyph and bevel matches 1:1. Placed above the editor and the bar.
+    var dlgImg = el('img', null, desktop);
+    dlgImg.src = 'icons/os2/dialog-warning.png';
+    dlgImg.draggable = false;
+    dlgImg.style.cssText = 'position:absolute;left:116px;top:57px;' +
+                           'image-rendering:pixelated;z-index:9600';
+    // the mouse pointer (over Cancel) is baked into the extracted dialog image.
   }
 };
 
