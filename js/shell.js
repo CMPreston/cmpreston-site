@@ -169,6 +169,62 @@ function makeDraggable(win, handle) {
   });
 }
 
+// Window resizing, mimicking each system's real behavior:
+//  - BeOS R5 resizes from the bottom-right corner ONLY (a deliberate Be trait —
+//    the dotted resize thumb where the scrollbars meet).
+//  - OS/2 Warp 4's Presentation Manager resizes from any side or corner of the
+//    sizing border, with directional cursors.
+// Handles are transparent overlays sitting on existing chrome, so they add no
+// visible pixels (the pixel-diff fixtures are unaffected). Pointer capture on
+// the handle keeps the drag alive when the pointer crosses a poem <iframe>.
+// Dialogs (about/alert) stay fixed-size, as they are in both real systems.
+var RZ_MIN_W = 150, RZ_MIN_H = 64;
+function makeResizable(win) {
+  var node = win.node;
+  var body = node.querySelector('.win-body');
+  if (!body) return;
+  var dirs = SKIN === 'beos'
+    ? ['se']
+    : ['e', 'w', 's', 'n', 'se', 'sw'];
+  dirs.forEach(function (dir) {
+    var h = el('div', 'rz rz-' + dir, node);
+    h.addEventListener('pointerdown', function (e) {
+      if (e.button !== 0) return;
+      e.preventDefault();
+      e.stopPropagation();
+      focusWindow(win);
+      try { h.setPointerCapture(e.pointerId); } catch (err) {}
+      var sx = e.clientX, sy = e.clientY;
+      var startW = node.offsetWidth, startBodyH = body.offsetHeight;
+      var startL = node.offsetLeft, startT = node.offsetTop;
+      function move(ev) {
+        var dx = ev.clientX - sx, dy = ev.clientY - sy;
+        if (dir.indexOf('e') !== -1) {
+          node.style.width = Math.max(RZ_MIN_W, startW + dx) + 'px';
+        } else if (dir.indexOf('w') !== -1) {
+          var nw = Math.max(RZ_MIN_W, startW - dx);
+          node.style.width = nw + 'px';
+          node.style.left = (startL + startW - nw) + 'px';
+        }
+        if (dir.indexOf('s') !== -1) {
+          body.style.height = Math.max(RZ_MIN_H, startBodyH + dy) + 'px';
+        } else if (dir.indexOf('n') !== -1) {
+          var nh = Math.max(RZ_MIN_H, startBodyH - dy);
+          body.style.height = nh + 'px';
+          node.style.top = Math.max(0, startT + startBodyH - nh) + 'px';
+        }
+      }
+      function up() {
+        try { h.releasePointerCapture(e.pointerId); } catch (err) {}
+        h.removeEventListener('pointermove', move);
+        h.removeEventListener('pointerup', up);
+      }
+      h.addEventListener('pointermove', move);
+      h.addEventListener('pointerup', up);
+    });
+  });
+}
+
 var cascade = { n: 0 };
 function nextPos(w, h) {
   var base = SKIN === 'beos' ? { x: 120, y: 60 } : { x: 140, y: 70 };
@@ -236,6 +292,7 @@ function createWindow(opts) {
 
   node.addEventListener('pointerdown', function () { focusWindow(win); }, true);
   makeDraggable(win, handle);
+  if (opts.kind === 'folder' || opts.kind === 'doc') makeResizable(win);
   windows.push(win);
   if (opts.active !== false) focusWindow(win);
   return win;
