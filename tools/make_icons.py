@@ -125,6 +125,52 @@ def _knockout_blue(rgba):
             if p[0] < 40 and p[1] < 40 and p[2] > 90:
                 px[x, y] = (0, 0, 0, 0)
 
+def _declutter(rgba, minsize=25):
+    """Drop isolated speckle: keep only connected opaque components >= minsize."""
+    from collections import deque
+    px = rgba.load(); W, H = rgba.size
+    seen = [[False] * H for _ in range(W)]
+    keep = [[False] * H for _ in range(W)]
+    for sx in range(W):
+        for sy in range(H):
+            if seen[sx][sy] or px[sx, sy][3] == 0:
+                continue
+            q = deque([(sx, sy)]); comp = []; seen[sx][sy] = True
+            while q:
+                x, y = q.popleft(); comp.append((x, y))
+                for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1),
+                               (1, 1), (-1, -1), (1, -1), (-1, 1)):
+                    nx, ny = x + dx, y + dy
+                    if 0 <= nx < W and 0 <= ny < H and not seen[nx][ny] and px[nx, ny][3] > 0:
+                        seen[nx][ny] = True; q.append((nx, ny))
+            if len(comp) >= minsize:
+                for x, y in comp:
+                    keep[x][y] = True
+    for x in range(W):
+        for y in range(H):
+            if not keep[x][y]:
+                px[x, y] = (0, 0, 0, 0)
+
+def crop_clean(src_rel, box, dst):
+    """A production desktop icon: knock out the blue field (B notably > R), drop
+    speckle, tight-crop, and pad to a centred square so CSS 32x32 doesn't
+    distort it. Used for the manifest-driven folder/shredder desktop icons."""
+    im = Image.open(REF / src_rel).convert('RGB').crop(box).convert('RGBA')
+    px = im.load()
+    for y in range(im.height):
+        for x in range(im.width):
+            r, g, b, a = px[x, y]
+            if r < 62 and g < 66 and b > r + 20:
+                px[x, y] = (0, 0, 0, 0)
+    _declutter(im)
+    im = im.crop(im.getbbox())
+    s = max(im.size)
+    sq = Image.new('RGBA', (s, s), (0, 0, 0, 0))
+    sq.alpha_composite(im, ((s - im.width) // 2, (s - im.height) // 2))
+    (OUT / dst).parent.mkdir(parents=True, exist_ok=True)
+    sq.save(OUT / dst)
+    print(f'{dst:28s} {sq.size[0]}x{sq.size[1]}  <- {src_rel} {box} (clean)')
+
 def cut_os2(only=None):
     def want(dst):
         return not only or any(f in dst for f in only)
@@ -243,10 +289,14 @@ def cut_os2(only=None):
         crop(D, (122, 33, 158, 67), 'os2/poems.png', 'blue')
     if want('os2/shredder'):
         crop(D, (552, 430, 604, 467), 'os2/shredder.png', 'blue')
-    # in-folder Demos icon (over white client) and its generic folder twin
-    if want('os2/folder-win') or want('os2/folder.png'):
+    # in-folder Demos icon (over white client), used 1:1 by the fixtures
+    if want('os2/folder-win'):
         crop('os2/02-folder.png', (103, 90, 141, 125), 'os2/folder-win.png')
-        crop('os2/02-folder.png', (103, 90, 141, 125), 'os2/folder.png')
+    # production desktop folder + shredder: clean transparent, decluttered, square
+    if want('os2/folder.png'):
+        crop_clean('os2/01-desktop.png', (123, 35, 159, 67), 'os2/folder.png')
+    if want('os2/trash.png'):
+        crop_clean('os2/01-desktop.png', (553, 420, 601, 457), 'os2/trash.png')
     # whole Demos icon+label units, placed 1:1 in the folder client (02 shows it
     # unselected, 05 selected with a blue label box)
     if want('os2/demos'):
