@@ -1,0 +1,50 @@
+# cmpreston.com robots policy
+# Search engines: welcome; the site should be findable.
+# Web archives and AI-training crawlers: excluded by policy.
+# robots.txt is advisory; enforcement lives in the Cloudflare WAF
+# (ASN 7941 block + archive user-agent block). See README deploy notes.
+
+User-agent: *
+Disallow:
+
+# Internet Archive / Wayback Machine crawlers
+User-agent: archive.org_bot
+Disallow: /
+
+User-agent: ia_archiver
+Disallow: /
+
+User-agent: ia_archiver-web.archive.org
+Disallow: /
+
+# Archive-It (Internet Archive crawling service)
+User-agent: Archive-It
+Disallow: /
+
+# AI-training / bulk-corpus crawlers
+User-agent: CCBot
+Disallow: /
+
+User-agent: GPTBot
+Disallow: /
+
+User-agent: ClaudeBot
+Disallow: /
+
+User-agent: anthropic-ai
+Disallow: /
+
+User-agent: Google-Extended
+Disallow: /
+
+User-agent: Applebot-Extended
+Disallow: /
+
+User-agent: PerplexityBot
+Disallow: /
+
+User-agent: Bytespider
+Disallow: /
+
+User-agent: meta-externalagent
+Disallow: /
