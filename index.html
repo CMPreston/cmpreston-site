@@ -14,7 +14,7 @@
   var skin = q.get('skin') || (function () {
     try { return localStorage.getItem('skin'); } catch (e) { return null; }
   })() || 'beos';
-  if (skin !== 'beos' && skin !== 'os2') skin = 'beos';
+  if (skin !== 'beos' && skin !== 'os2' && skin !== 'macos') skin = 'beos';
   window.SKIN = skin;
   document.documentElement.className = 'skin-' + skin;
   document.write('<link rel="stylesheet" href="css/' + skin + '.css">');
