@@ -1,0 +1,220 @@
+/* Mac OS 8.6 skin (Platinum appearance, 1998ish): grey Workplace-style chrome,
+   pinstriped title bars, a full-width screen-top menu bar (unlike beos/os2,
+   which keep their tray/toolbar bar but no File/Edit-style pulldown row).
+
+   STUB / PLACEHOLDER FILE: unlike beos.css and os2.css (values measured off
+   real emulator captures), this skin has no reference screenshots yet — it
+   is not part of the pixel-diff suite. Every color, bevel and font value
+   below is a plausible placeholder pending that future pixel-fidelity pass:
+   face greys in the #dddddd range, 1px black hairline outlines, white/dark
+   bevels, a repeating-linear-gradient standing in for the real pinstripe
+   title bar, a 20px menu bar, 'system-ui, Helvetica' standing in for
+   Charcoal/Chicago. Structural rules (sizing that shell.js's layout math
+   depends on, e.g. the 20px bar height) are load-bearing now; cosmetics are
+   not. Every tunable value lives in :root. */
+
+:root {
+  /* desktop */
+  --desk-bg: #999999;        /* placeholder desktop grey; a real pattern/backdrop lands later */
+  --desk-label-fg: #000000;  /* classic Mac desktop labels: black text, not white */
+  --sel-bg: #000080;         /* placeholder selection navy */
+  --sel-fg: #ffffff;
+
+  /* Platinum face + bevels (shared by macbar, windows, menus, buttons) */
+  --chrome: #dddddd;
+  --chrome-hi: #ffffff;
+  --chrome-lo: #888888;
+  --chrome-dk: #000000;
+  --content-bg: #ffffff;
+
+  /* screen-top menu bar (#macbar) + in-window title bar (.titlebar-mac) */
+  --menubar-h: 20px;
+  --titlebar-h: 19px;
+  --title-fg: #000000;
+  --title-pin-a: #ffffff;    /* pinstripe light stripe, placeholder */
+  --title-pin-b: #dddddd;    /* pinstripe dark stripe, placeholder */
+  --title-inactive: #dddddd; /* inactive title bar: solid, no pinstripe */
+
+  /* menus */
+  --menu-bg: #ffffff;
+  --menu-fg: #000000;
+  --menu-dis-fg: #888888;
+  --menu-hl-bg: #000080;
+  --menu-hl-fg: #ffffff;
+
+  /* scrollbars */
+  --sb-w: 16px;
+
+  /* type */
+  --ui-font: system-ui, Helvetica, Arial, sans-serif;  /* Charcoal-ish stand-in, placeholder */
+  --ui-size: 12px;
+}
+
+body {
+  background: var(--desk-bg);
+  font-family: var(--ui-font);
+  font-size: var(--ui-size);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---- desktop / icons ----
+   Column down the right edge below the macbar, Trash pinned bottom-right
+   (see shell.js deskSlots) — both real Finder desktop defaults. */
+.desk-icon { width: 80px; }
+.desk-icon .icon-label { color: var(--desk-label-fg); }
+.icon-label { font-size: var(--ui-size); margin-top: 2px; line-height: 1.1; }
+.icon.selected .icon-label span { background: var(--sel-bg); color: var(--sel-fg); padding: 0 2px; }
+.grid-icon .icon-label { color: #000; }   /* in a white folder window */
+
+/* ---- menu bar (#macbar, screen-top, 20px) ----
+   Apple menu | File Edit View Special Help (via the shared buildMenubar
+   helper) | flex spacer | clock | app indicator (icon + "Finder"). */
+#macbar {
+  position: absolute; top: 0; left: 0; width: 100%; height: var(--menubar-h);
+  background: var(--chrome); border-bottom: 1px solid var(--chrome-dk);
+  display: flex; align-items: center; z-index: 9000; overflow: hidden;
+}
+.mb-apple {
+  font: inherit; font-size: var(--ui-size); width: 28px; height: 100%;
+  border: 0; background: transparent; padding: 0; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.mb-apple img { width: 14px; height: 14px; image-rendering: pixelated; }
+/* the shared buildMenubar() helper renders File/Edit/View/Special/Help here;
+   base.css only sets display:flex on .menubar, everything else is skin CSS */
+#macbar .menubar { background: transparent; height: 100%; padding: 0; gap: 0; }
+#macbar .menubar-item {
+  height: 100%; padding: 0 10px; font-size: var(--ui-size); color: #000;
+  display: flex; align-items: center;
+}
+#macbar .menubar-item:hover { background: var(--menu-hl-bg); color: var(--menu-hl-fg); }
+.mb-clock { margin-left: auto; padding: 0 10px; font-size: var(--ui-size); color: #000; }
+.mb-app {
+  height: 100%; display: flex; align-items: center; gap: 4px;
+  padding: 0 10px; border-left: 1px solid var(--chrome-lo); color: #000;
+}
+.mb-app img { width: 14px; height: 14px; image-rendering: pixelated; }
+
+/* ---- windows / titlebar ----
+   Raised Platinum frame (border + inset highlight/shadow), same "inner =
+   node" structure as os2 (no separate .frame wrapper like beos). Title bar:
+   close box | title (centered) | collapse + zoom boxes. No in-window menu
+   bar (Mac menus live in #macbar; see createWindow's macos branch). */
+.win {
+  background: var(--chrome);
+  border: 1px solid var(--chrome-dk);
+  box-shadow: inset 1px 1px 0 var(--chrome-hi), inset -1px -1px 0 var(--chrome-lo);
+  padding: 1px;
+}
+.win-body { background: var(--content-bg); }
+
+.titlebar-mac {
+  display: flex; align-items: center; height: var(--titlebar-h);
+  border-bottom: 1px solid var(--chrome-dk);
+  background: repeating-linear-gradient(180deg,
+    var(--title-pin-a) 0px, var(--title-pin-a) 1px,
+    var(--title-pin-b) 1px, var(--title-pin-b) 2px);
+  padding: 0 4px;
+}
+.win:not(.win-active) .titlebar-mac { background: var(--title-inactive); }
+.mtb-close, .mtb-collapse, .mtb-zoom {
+  flex: 0 0 auto; width: 11px; height: 11px; cursor: pointer;
+  background: var(--chrome); border: 1px solid var(--chrome-dk);
+  box-shadow: inset 1px 1px 0 var(--chrome-hi);
+}
+.mtb-close { margin-right: 6px; }
+.mtb-collapse { margin-left: 6px; }
+.mtb-zoom { margin-left: 4px; }
+/* real Mac OS hides the box row entirely on a background window, rather than
+   just dimming it (beos/os2's approach) */
+.win:not(.win-active) .mtb-close,
+.win:not(.win-active) .mtb-collapse,
+.win:not(.win-active) .mtb-zoom { visibility: hidden; }
+.mtb-title {
+  flex: 1 1 auto; text-align: center; font-weight: bold; font-size: var(--ui-size);
+  color: var(--title-fg); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.win:not(.win-active) .mtb-title { color: var(--title-fg); }
+
+/* ---- menus (pulldowns from #macbar and icon/desktop context menus) ---- */
+.menu {
+  background: var(--menu-bg); border: 1px solid var(--chrome-dk);
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.3);
+  padding: 2px 0; min-width: 140px; font-size: var(--ui-size);
+}
+.menu-item { display: flex; align-items: center; height: 18px; padding: 0 16px 0 20px; color: var(--menu-fg); }
+.menu-item.default .menu-label { font-weight: bold; }
+.menu-item:hover:not(.disabled),
+.menu-item.forced-hover:not(.disabled) { background: var(--menu-hl-bg); color: var(--menu-hl-fg); }
+.menu-item.disabled { color: var(--menu-dis-fg); }
+.menu-sep { height: 1px; margin: 4px 2px; background: var(--chrome-lo); }
+.menu-arrow { margin-left: 14px; }
+.menu-arrow::after {
+  content: ''; display: inline-block; width: 0; height: 0;
+  border-left: 4px solid currentColor; border-top: 4px solid transparent; border-bottom: 4px solid transparent;
+}
+.menu-accel { margin-left: 20px; }
+
+/* ---- scrollbars (document window furniture: sb-v right, sb-h bottom) ---- */
+.sb { background: var(--chrome); }
+.sb-v { position: absolute; top: 0; right: 0; bottom: var(--sb-w); width: var(--sb-w); }
+.sb-h { position: absolute; left: 0; right: var(--sb-w); bottom: 0; height: var(--sb-w); }
+.sb-btn {
+  width: var(--sb-w); height: var(--sb-w); background: var(--chrome);
+  border: 1px solid var(--chrome-dk);
+  box-shadow: inset 1px 1px 0 var(--chrome-hi), inset -1px -1px 0 var(--chrome-lo);
+}
+.sb-track {
+  flex: 1 1 auto; position: relative; background: var(--chrome);
+  box-shadow: inset 1px 1px 0 var(--chrome-hi), inset -1px -1px 0 var(--chrome-lo);
+}
+.sb-thumb { position: absolute; left: 0; right: 0; background: var(--chrome-lo); border: 1px solid var(--chrome-dk); }
+.iframe-clip { right: var(--sb-w); bottom: var(--sb-w); }
+/* grow box: bottom-right corner of document windows only (see createWindow) */
+.resize-corner {
+  position: absolute; right: 0; bottom: 0; z-index: 4; pointer-events: none;
+  width: var(--sb-w); height: var(--sb-w); background: var(--chrome);
+  background-image: repeating-linear-gradient(135deg,
+    var(--chrome-lo) 0, var(--chrome-lo) 1px, transparent 1px, transparent 3px);
+}
+
+/* ---- editor / doc ----
+   Production doc windows are the poem iframe (see openDoc/buildDocScrollbars
+   in shell.js); no synthetic editor-text view outside the fixtures. */
+.doc-view { background: var(--content-bg); }
+
+/* ---- dialogs / buttons ---- */
+.about-simple { background: var(--chrome); }
+.mac-button {
+  font: inherit; font-size: var(--ui-size); min-width: 60px; height: 20px;
+  padding: 2px 10px; background: var(--chrome); color: #000;
+  border: 1px solid var(--chrome-dk); border-radius: 4px;
+  box-shadow: inset 1px 1px 0 var(--chrome-hi), inset -1px -1px 0 var(--chrome-lo);
+}
+.mac-button:active { box-shadow: inset 1px 1px 0 var(--chrome-lo), inset -1px -1px 0 var(--chrome-hi); }
+.default-button { border-width: 2px; }
+
+/* system alert (Trash-empty, raised via showAlert(); same function beos
+   uses, see emptyTrashAlert in shell.js) */
+.win-alert {
+  background: var(--chrome); border: 1px solid var(--chrome-dk);
+  box-shadow: inset 1px 1px 0 var(--chrome-hi), inset -1px -1px 0 var(--chrome-lo);
+  padding: 0;
+}
+.alert-body { display: flex; height: 100%; padding: 8px; position: relative; }
+.alert-stripe { flex: 0 0 40px; }
+.alert-icon { position: absolute; left: 6px; top: 6px; width: 32px; height: 32px; image-rendering: pixelated; }
+.alert-content { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; padding: 4px 6px 6px 20px; }
+.alert-text { font-size: var(--ui-size); line-height: 15px; }
+.alert-buttons { margin-top: auto; display: flex; justify-content: flex-end; gap: 8px; padding-top: 8px; }
+
+/* ---- mobile ---- */
+body.mobile { background: var(--desk-bg); }
+.m-head {
+  background: var(--chrome); color: #000; font-weight: bold; padding: 12px;
+  border-bottom: 1px solid var(--chrome-dk); display: flex;
+  justify-content: space-between; align-items: center;
+}
+.m-row { background: var(--content-bg); border-bottom: 1px solid var(--chrome-lo); color: #000; }
+.m-bar { background: var(--chrome); color: #000; padding: 10px; font-weight: bold; border-bottom: 1px solid var(--chrome-dk); }
+.m-foot { padding: 14px; color: #333333; font-size: 12px; }
