@@ -604,8 +604,38 @@ def cut_macos(only=None):
     # bitmap text + bevels a CSS menu/dialog can't hit the 2% bar with yet ----
     if want('macos/menu-desktop-context'):
         crop('macos/05-context-menu.png', (306, 204, 532, 339), 'macos/menu-desktop-context.png')
+    # wave-3 correction: the wave-2 box (131,85,509,192) started 19px too low,
+    # cutting off the dialog's own striped title band entirely (PIL border-scan
+    # against reference/macos/06-dialog.png finds the true outer black frame at
+    # x=133..507, y=66..191 -- the old top bound of y=85 lands INSIDE the title
+    # stripe, well past the frame's real top edge at y=66). That 19-row loss
+    # was the single largest contributor to the 06 residual (the whole striped
+    # band rendered as bare desktop instead of the extracted rectangle).
     if want('macos/dialog-wastebasket'):
-        crop('macos/06-dialog.png', (131, 85, 509, 192), 'macos/dialog-wastebasket.png')
+        crop('macos/06-dialog.png', (133, 66, 508, 192), 'macos/dialog-wastebasket.png')
+
+    # ---- wave-3 menu/dialog-state crops ----
+    # Wastebasket desktop icon, FULL-bin variant: at capture time for 05/06 the
+    # throwaway file was already in the bin, so those two references show the
+    # full can (crumpled paper visible), not the empty lid state 01-04 use.
+    # Same screen rectangle as the empty 'desktop-wastebasket' crop (557,409)-
+    # (627,460); 06-dialog.png is the source because it measures byte-closer
+    # to reference/raw/macos-emulator/wastebasket-full.png (the dedicated
+    # close-up capture) than the same rectangle in 05-context-menu.png does
+    # (SSD 6.6M vs 18.3M at the best-matching offset) -- 05's copy carries a
+    # bit more emulator-capture noise at this rectangle.
+    if want('macos/desktop-wastebasket-full'):
+        crop('macos/06-dialog.png', (557, 409, 627, 460), 'macos/desktop-wastebasket-full.png')
+
+    # Warning-triangle icon, extracted standalone for the PRODUCTION alert.
+    # Named alert-icon.png (not e.g. alert-warning.png) because shell.js's
+    # showAlert() hardcodes iconPath('alert-icon') for every skin -- see
+    # beos/alert-icon.png above for the sibling file this matches. The
+    # fixture keeps using the whole dialog-wastebasket rectangle above, so
+    # this file is production-only. Yellow-fill bounding box measured at
+    # x=[158,185] y=[103,129]; padded a few px to keep the black outline.
+    if want('macos/alert-icon'):
+        crop('macos/06-dialog.png', (155, 100, 188, 132), 'macos/alert-icon.png')
 
     # ---- Control Strip (bottom-left docked bar). Measured byte-identical
     # across all six states (only an 8x8px corner clipped by the SimpleText
