@@ -76,6 +76,7 @@ var SKINS = {
     folderTitleSuffix: '',
     topBar: buildMenuBar,
     clockFormat: 'ampm',
+    clockLower: true,   // the UK 8.6 reference renders "3:29 am", lowercase
     clockTickMs: 5000,
     resizeDirs: ['e', 'w', 's', 'se', 'sw'],
     maximizeTop: 20   // below the 20px macbar
@@ -118,6 +119,13 @@ function folderTitle(item) {
 function closeMenus(fromLevel) {
   fromLevel = fromLevel || 0;
   while (openMenus.length > fromLevel) openMenus.pop().remove();
+  // menu-bar titles stay lit while their menu is open (real Mac OS behavior;
+  // the class is styled by macos.css only, inert on the other skins)
+  if (fromLevel === 0) {
+    document.querySelectorAll('.mb-open').forEach(function (n) {
+      n.classList.remove('mb-open');
+    });
+  }
 }
 
 // items: [{label, action, sub, disabled, checked, def, sep, header, icon,
@@ -520,6 +528,7 @@ function buildMenubar(parent, menus, win) {
       e.stopPropagation();
       var r = item.getBoundingClientRect();
       showMenu(mdef.items(win), r.left, r.bottom);
+      item.classList.add('mb-open');
     });
   });
   return bar;
@@ -989,6 +998,7 @@ function tickClock() {
   var mm = String(d.getMinutes()).padStart(2, '0');
   var ap = d.getHours() < 12 ? 'AM' : 'PM';
   var cfg = SKINS[SKIN];
+  if (cfg.clockLower) ap = ap.toLowerCase();
   if (cfg.clockFormat === 'ampmss') {
     // WarpCenter shows H:MM:SS AM (seconds visible in the reference)
     var ss = String(d.getSeconds()).padStart(2, '0');
@@ -1054,6 +1064,7 @@ function buildMenuBar() {
     e.stopPropagation();
     var r = apple.getBoundingClientRect();
     showMenu(macosAppleMenuItems(), r.left, r.bottom);
+    apple.classList.add('mb-open');   // stays lit until closeMenus clears it
   });
   buildMenubar(mb, [
     { label: 'File', items: macosFileMenuItems },
@@ -1166,7 +1177,7 @@ function openItem(item) {
 // and, on macos, by the Special menu's Empty Trash… too (see buildMenuBar).
 function emptyTrashAlert() {
   return showAlert({
-    text: 'The Trash is empty.',
+    text: 'The ' + trashName() + ' is empty.',
     buttons: [{ label: 'OK', def: true }]
   });
 }
