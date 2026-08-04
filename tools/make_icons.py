@@ -637,13 +637,53 @@ def cut_macos(only=None):
     if want('macos/alert-icon'):
         crop('macos/06-dialog.png', (155, 100, 188, 132), 'macos/alert-icon.png')
 
-    # ---- Control Strip (bottom-left docked bar). Measured byte-identical
-    # across all six states (only an 8x8px corner clipped by the SimpleText
-    # window's own edge differs in 04 -- the strip itself never changes), so
-    # one extraction serves every fixture. Also a production asset (renders
-    # as a decorative element, like OS/2's WarpCenter strip). ----
+    # ---- Control Strip (bottom-left docked bar). The strip content itself
+    # never changes, but wave-3 pixel-measurement found the 01-desktop crop is
+    # NOT byte-identical to 04's own capture: the SimpleText document window
+    # in 04-document.png is genuinely tall enough (see win-doc geometry below)
+    # that its bottom-left corner bevel overlaps the strip's top ~10-14 rows
+    # (measured: 370x14 differing region, not the "8x8 corner" an earlier pass
+    # assumed -- corrected here from direct pixel comparison, not carried
+    # forward). One extraction serves states 01/02/03/05/06 (no window reaches
+    # that low there); 04 gets its own per-state crop below so the composited
+    # window-over-strip pixels match 1:1 without having to model the overlap. ----
     if want('macos/controlstrip'):
         crop('macos/01-desktop.png', (0, 454, 370, 480), 'macos/controlstrip.png')
+    if want('macos/controlstrip-04'):
+        crop('macos/04-document.png', (0, 454, 370, 480), 'macos/controlstrip-04.png')
+
+    # ---- wave-3 chrome-state crops -----------------------------------------
+    # Title-bar widget glyphs (close/collapse/zoom): measured 12x12px each,
+    # starting at the pinstripe zone's own top (see wave-3 report). Per-pixel
+    # bevelled glyph art (not a flat bevel CSS can redraw), so extracted like
+    # OS/2's sysmenu/titlebtns. Active-state only: real Mac OS hides the whole
+    # box row on an inactive window (measured, see css/macos.css), so no
+    # inactive variant is needed. Source: 02-folder.png (Poems, active).
+    if want('macos/mtb-close'):
+        crop('macos/02-folder.png', (11, 29, 23, 41), 'macos/mtb-close.png')
+    if want('macos/mtb-collapse'):
+        crop('macos/02-folder.png', (390, 29, 402, 41), 'macos/mtb-collapse.png')
+    if want('macos/mtb-zoom'):
+        crop('macos/02-folder.png', (406, 29, 418, 41), 'macos/mtb-zoom.png')
+    # Desktop Poems icon, "opened" (darkened) variant: real Finder darkens a
+    # folder's desktop icon while its window is open. Correction (direct
+    # pixel check, not carried forward from the "measured byte-identical"
+    # assumption this comment used to make): 02 and 03 are NOT identical here
+    # -- 02 additionally shows the icon SELECTED (black label; Poems was just
+    # double-clicked open and stays the current selection), while 03 shows it
+    # open-but-unselected (light label; focus moved to Demos, opened
+    # afterward, which deselects the Poems desktop icon). Two crops, one per
+    # state. 'folder' (normal, unopened) stays the 01-sourced crop above.
+    if want('macos/desktop-poems-opened'):
+        crop('macos/02-folder.png', (571, 153, 612, 212), 'macos/desktop-poems-opened.png')
+    if want('macos/desktop-poems-opened-unsel'):
+        crop('macos/03-nested.png', (571, 153, 612, 212), 'macos/desktop-poems-opened-unsel.png')
+    # Grow box (resize corner): measured art is a small DIAMOND checkerboard
+    # glyph centered in the 16x16 tile, not a uniform diagonal hatch (a CSS
+    # repeating-gradient approximation was tried first and measured further
+    # from the reference than this direct extraction).
+    if want('macos/growbox'):
+        crop('macos/02-folder.png', (407, 248, 423, 264), 'macos/growbox.png')
 
     # ---- production icons: clean, transparent, cut from the SAME genuine
     # Mac OS 8.6 art (Poems is a real folder, "what the door does" a real

@@ -3,16 +3,16 @@
    which keep their tray/toolbar bar but no File/Edit-style pulldown row).
 
    Wave 2 added real references (reference/macos/*.png, our own SheepShaver
-   captures) and the fixtures; wave 3 (this pass) is the pixel-fidelity tune
-   for 01/05/06 plus measured production styling for the menus, the alert
-   dialog and desktop labels (02/03/04 chrome is a parallel pass elsewhere).
-   Values below are MEASURED via PIL pixel sampling against the references
-   and the raw menu/dialog captures (reference/raw/macos-emulator/*.png) --
-   see the inline comments at each rule for what was sampled and where. A few
-   corners remain plausible-not-measured placeholders where no reference
-   shows the case (noted individually, e.g. --title-pin-a/b: the in-window
-   title bar pinstripe, which the 02/03/04 pass owns). Every tunable value
-   lives in :root. */
+   captures of a genuine Mac OS 8.6 install) and the content-parity fixtures.
+   Wave 3 tuned everything below against those references via PIL pixel
+   sampling (never eyeballed), same discipline as beos.css/os2.css: one pass
+   owned the window chrome (title bar geometry/pinstripes, frame bevel rings,
+   scrollbars, Geneva bilevel type) for states 02/03/04, a parallel pass
+   owned the desktop, menu bar bevel, pulldown menus, alert dialog and
+   desktop labels for 01/05/06, with production menu/dialog values sampled
+   from the raw captures (reference/raw/macos-emulator/*.png). See the
+   inline comment at each rule for what was sampled and where. Every tunable
+   value lives in :root. */
 
 :root {
   /* desktop */
@@ -28,20 +28,37 @@
                                  titles, icon labels, text selection) */
   --sel-fg: #ffffff;
 
-  /* Platinum face + bevels (shared by macbar, windows, menus, buttons) */
+  /* Platinum face + bevels shared by macbar/menus/buttons (measured: menu bar
+     face IS #dddddd, confirmed by 01-desktop's 0.287% pass) */
   --chrome: #dddddd;
   --chrome-hi: #ffffff;
   --chrome-lo: #888888;
   --chrome-dk: #000000;
   --content-bg: #ffffff;
 
-  /* screen-top menu bar (#macbar) + in-window title bar (.titlebar-mac) */
+  /* Window-frame-specific greys: measured off the Poems/Demos/SimpleText
+     frames in 02/03/04, distinct from --chrome (menu bar/buttons stay
+     #dddddd). Three-rung Platinum ramp cc/dd/ee: window face is cc, not the
+     menu bar's dd; scrollbar face is ee. */
+  --win-face: #cccccc;       /* window frame face, measured (204,204,204) */
+  --win-shade: #999999;      /* frame bevel shade ring, measured (153,153,153) */
+  --win-inactive-border: #555555;  /* inactive window border, measured (85,85,85) */
+
+  /* screen-top menu bar (#macbar) + in-window title bar (.titlebar-mac).
+     titlebar-mac's own CSS height is 20px (its content: 1px hi + 2px face +
+     12px pinstripe + 4px face + 1px shade) + 1px own border-bottom = 21px,
+     plus the 1px black top border it shares with .win = 22px total visual
+     band, matching the reference measurement exactly (was 19px placeholder). */
   --menubar-h: 20px;
-  --titlebar-h: 19px;
+  /* 21, not 20: base.css sets * { box-sizing: border-box }, so height:21px
+     with a 1px border-bottom gives a 20px padding-box -- exactly the 20-row
+     gradient below (1 hi + 2 face + 12 pinstripe + 4 face + 1 shade). Missing
+     this the first time round clipped the gradient's last (shade) row. */
+  --titlebar-h: 21px;
   --title-fg: #000000;
-  --title-pin-a: #ffffff;    /* pinstripe light stripe, placeholder */
-  --title-pin-b: #dddddd;    /* pinstripe dark stripe, placeholder */
-  --title-inactive: #dddddd; /* inactive title bar: solid, no pinstripe */
+  --title-pin-a: #ffffff;    /* pinstripe light stripe, measured (255,255,255) */
+  --title-pin-b: #777777;    /* pinstripe dark stripe, measured (119,119,119) */
+  --title-inactive: #dddddd; /* inactive title bar: solid, measured (221,221,221) */
 
   /* menus: all four values MEASURED off reference/raw/macos-emulator/
      file-menu-open.png (interior fill + disabled-item/separator samples)
@@ -57,12 +74,23 @@
   --menu-hl-bg: #333399;     /* MEASURED (51,51,153): open/highlighted title */
   --menu-hl-fg: #ffffff;
 
-  /* scrollbars */
+  /* scrollbars: 16px width already matched the reference. Track/button face
+     and arrow-glyph/divider colors measured off 02-folder's vertical and
+     horizontal scrollbars. */
   --sb-w: 16px;
+  --sb-face: #eeeeee;        /* track + button face, measured (238,238,238) */
+  --sb-arrow: #888888;       /* arrow glyph, measured (136,136,136) */
+  --sb-divider: #777777;     /* button/track divider line, measured (119,119,119) */
 
-  /* type */
-  --ui-font: system-ui, Helvetica, Arial, sans-serif;  /* Charcoal-ish stand-in, placeholder */
-  --label-font: Geneva, 'Bitstream Vera Sans', Verdana, Helvetica, Arial, sans-serif;  /* classic Mac desktop/list labels set in Geneva; hinted first, degrades gracefully */
+  /* type: Geneva is period-correct for Mac OS 8.6's small UI text (Charcoal
+     is the true system font but is not shippable or installable here);
+     measured against the header-row/title text it reads noticeably closer
+     than system-ui: bolder strokes, right x-height. Reference text is
+     crisply bilevel (hard pixel edges, no grey), not antialiased -- see
+     body's font-smoothing below. Labels keep their own Geneva-first stack
+     with graceful degradation for visitors without it. */
+  --ui-font: Geneva, Helvetica, Arial, sans-serif;
+  --label-font: Geneva, 'Bitstream Vera Sans', Verdana, Helvetica, Arial, sans-serif;
   --ui-size: 12px;
 }
 
@@ -75,7 +103,7 @@ body {
   background: var(--desk-bg) url('../icons/macos/pattern.png') 0 -40px repeat;
   font-family: var(--ui-font);
   font-size: var(--ui-size);
-  -webkit-font-smoothing: antialiased;
+  -webkit-font-smoothing: none;
 }
 
 /* ---- desktop / icons ----
@@ -133,42 +161,145 @@ body {
    Raised Platinum frame (border + inset highlight/shadow), same "inner =
    node" structure as os2 (no separate .frame wrapper like beos). Title bar:
    close box | title (centered) | collapse + zoom boxes. No in-window menu
-   bar (Mac menus live in #macbar; see createWindow's macos branch). */
+   bar (Mac menus live in #macbar; see createWindow's macos branch).
+
+   Frame bevel (wave 3, measured off the Poems/Demos/SimpleText frames): NOT
+   a simple 1px hi/lo ring. The content well (everything below the title bar)
+   is a 5px SUNKEN bevel on its left/right edges (the top edge is the title
+   bar's own border, flush, no extra ring) -- measured content-outward as
+   white,face,face,shade,black on the left and the mirror
+   black,shade,face,face,white on the right. Modeled by giving .win a 5px
+   padding on left/right (0 top/bottom: win's WIDTH is set inline to the
+   measured outer width, so border-box sizing does the left/right math for
+   free; win-body's HEIGHT is also set inline directly to the measured
+   content-well depth, so an extra bottom padding here would double-count
+   and push the window 5px too tall -- see win-body below, which owns the
+   bottom edge instead). This also makes .win-body's own left/right edges
+   fall exactly on the measured content/scrollbar boundaries (win-body's
+   right edge = the vertical scrollbar's right divider). */
 .win {
   background: var(--chrome);
   border: 1px solid var(--chrome-dk);
-  box-shadow: inset 1px 1px 0 var(--chrome-hi), inset -1px -1px 0 var(--chrome-lo);
-  padding: 1px;
+  padding: 0 5px;
+  box-shadow:
+    /* left: outer-to-inner white, face, face, shade, black */
+    inset 1px 0 0 var(--chrome-hi), inset 2px 0 0 var(--win-face),
+    inset 3px 0 0 var(--win-face), inset 4px 0 0 var(--win-shade),
+    inset 5px 0 0 var(--chrome-dk),
+    /* right: outer-to-inner black, shade, face, face, white */
+    inset -1px 0 0 var(--chrome-dk), inset -2px 0 0 var(--win-shade),
+    inset -3px 0 0 var(--win-face), inset -4px 0 0 var(--win-face),
+    inset -5px 0 0 var(--chrome-hi);
 }
-.win-body { background: var(--content-bg); }
+/* inactive: flat all over, not just the title bar -- the reference shows NO
+   bevel rings at all on a background window's frame (measured: all four
+   positions inside the border read the same flat --chrome, where an active
+   window shows the white/face/face/shade/black ramp), so the whole 10-ring
+   box-shadow is dropped, not just recolored. */
+.win:not(.win-active) { border-color: var(--win-inactive-border); box-shadow: none; }
+/* win-body's own bottom edge draws the 5px sunken-well bevel that .win's
+   left/right padding+box-shadow handle for the sides (see .win above): win-
+   body's height is set inline to the FULL measured content-well depth
+   (already includes this 5px), so the ring has to live here, not as extra
+   .win padding (which would double-count and push the window too tall).
+   Content-outward: white,face,face,shade,black -- same order as the right
+   edge. .sb-h/.sb-v are lifted by the matching 5px (below) so the horizontal
+   scrollbar's own row doesn't paint over it. */
+.win-body {
+  background: var(--content-bg);
+  box-shadow:
+    inset 0 -1px 0 var(--chrome-dk), inset 0 -2px 0 var(--win-shade),
+    inset 0 -3px 0 var(--win-face), inset 0 -4px 0 var(--win-face),
+    inset 0 -5px 0 var(--chrome-hi);
+}
+/* same "flat when inactive" rule as .win above */
+.win:not(.win-active) .win-body { box-shadow: none; }
 
 .titlebar-mac {
+  position: relative;
   display: flex; align-items: center; height: var(--titlebar-h);
   border-bottom: 1px solid var(--chrome-dk);
-  background: repeating-linear-gradient(180deg,
-    var(--title-pin-a) 0px, var(--title-pin-a) 1px,
-    var(--title-pin-b) 1px, var(--title-pin-b) 2px);
-  padding: 0 4px;
+  /* 20px content, measured top-to-bottom: 1px hi, 2px face, 12px pinstripe,
+     4px face, 1px shade. Two background layers: the striped layer covers the
+     full height; the top layer paints solid bands over the 3px lead-in and
+     5px trailing face+shade, and is transparent over the 12px stripe zone so
+     the layer beneath shows through only there. */
+  background:
+    linear-gradient(to bottom,
+      var(--chrome-hi) 0, var(--chrome-hi) 1px,
+      var(--win-face) 1px, var(--win-face) 3px,
+      transparent 3px, transparent 15px,
+      var(--win-face) 15px, var(--win-face) 19px,
+      var(--win-shade) 19px, var(--win-shade) 20px),
+    repeating-linear-gradient(to bottom,
+      var(--title-pin-b) 0, var(--title-pin-b) 1px,
+      var(--title-pin-a) 1px, var(--title-pin-a) 2px);
+  /* .win's own 5px left/right padding (for the deep frame bevel, see .win
+     above) is 2px deeper than the reference's title-bar widget inset: the
+     close/collapse/zoom glyphs sit only ~3px off the frame border, encroaching
+     2px into what is (below the title bar) the sunken content bevel. A -2px
+     left margin + 0 right padding pulls the row back out to that measured
+     inset without touching win-body's own (correct) 5px inset. */
+  margin-left: -2px;
+  padding: 0;
 }
 .win:not(.win-active) .titlebar-mac { background: var(--title-inactive); }
-.mtb-close, .mtb-collapse, .mtb-zoom {
-  flex: 0 0 auto; width: 11px; height: 11px; cursor: pointer;
-  background: var(--chrome); border: 1px solid var(--chrome-dk);
-  box-shadow: inset 1px 1px 0 var(--chrome-hi);
+/* doc windows (SimpleText): measured one row SHORTER than folder windows --
+   19px content, not 20: face(2)+stripe(12)+face(4)+shade(1), no leading 1px
+   hi row at all (confirmed against the 04-document reference; not a
+   position artifact, an authentic difference from the folder title bar).
+   Stripe phase flips too since the transparent window now starts at an
+   EVEN offset (2, not 3) -- pin-a has to lead here, not pin-b. */
+.win-doc .titlebar-mac {
+  height: 20px;
+  background:
+    linear-gradient(to bottom,
+      var(--win-face) 0, var(--win-face) 2px,
+      transparent 2px, transparent 14px,
+      var(--win-face) 14px, var(--win-face) 18px,
+      var(--win-shade) 18px, var(--win-shade) 19px),
+    repeating-linear-gradient(to bottom,
+      var(--title-pin-a) 0, var(--title-pin-a) 1px,
+      var(--title-pin-b) 1px, var(--title-pin-b) 2px);
 }
-.mtb-close { margin-right: 6px; }
-.mtb-collapse { margin-left: 6px; }
-.mtb-zoom { margin-left: 4px; }
+.mtb-close, .mtb-collapse, .mtb-zoom {
+  flex: 0 0 auto; width: 12px; height: 12px; cursor: pointer;
+  image-rendering: pixelated;
+  /* align-items:center on titlebar-mac lands these 1px lower than measured
+     (20px padding-box, 12px glyph, centered = 4px top gap; reference shows
+     3px) -- nudge up 1px rather than fight centering for the title text. */
+  margin-top: -1px;
+}
+/* doc windows' 19px-content title bar (see .win-doc .titlebar-mac above)
+   needs the box row 1px higher again to stay flush with its stripe start. */
+.win-doc .mtb-close, .win-doc .mtb-collapse, .win-doc .mtb-zoom { margin-top: -2px; }
+.mtb-close { background: url('../icons/macos/mtb-close.png'); margin-right: 6px; }
+.mtb-collapse { background: url('../icons/macos/mtb-collapse.png'); margin-left: 6px; }
+.mtb-zoom { background: url('../icons/macos/mtb-zoom.png'); margin-left: 4px; }
 /* real Mac OS hides the box row entirely on a background window, rather than
    just dimming it (beos/os2's approach) */
 .win:not(.win-active) .mtb-close,
 .win:not(.win-active) .mtb-collapse,
 .win:not(.win-active) .mtb-zoom { visibility: hidden; }
 .mtb-title {
-  flex: 1 1 auto; text-align: center; font-weight: bold; font-size: var(--ui-size);
-  color: var(--title-fg); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  flex: 1 1 auto; display: flex; justify-content: center; align-items: center;
+  min-width: 0;
 }
-.win:not(.win-active) .mtb-title { color: var(--title-fg); }
+/* the fitted pill: sized to its own icon+text content (not the flex row's
+   full width), solid face background so the pinstripe doesn't show through
+   around the icon or between icon and text (measured: reference has a clean
+   grey/white field there, no stripe bleed). */
+.mtb-title-fit {
+  background: var(--win-face); padding: 1px 4px; max-width: 100%;
+  font-weight: bold; font-size: var(--ui-size); color: var(--title-fg);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.win:not(.win-active) .mtb-title-fit { background: var(--title-inactive); color: var(--title-fg); }
+/* proxy icon, measured ~14x14, inline before the title text (see
+   createWindow). Unlike the close/collapse/zoom boxes, this one stays
+   visible when the window is inactive (confirmed in the reference: the
+   inactive Poems title in 03-nested still shows its folder icon). */
+.mtb-icon { width: 14px; height: 14px; vertical-align: -3px; margin-right: 3px; image-rendering: pixelated; }
 
 /* ---- menus (pulldowns from #macbar and icon/desktop context menus) ----
    MEASURED off reference/raw/macos-emulator/file-menu-open.png: flat fill
@@ -194,33 +325,90 @@ body {
 }
 .menu-accel { margin-left: 20px; }
 
-/* ---- scrollbars (document window furniture: sb-v right, sb-h bottom) ---- */
-.sb { background: var(--chrome); }
-.sb-v { position: absolute; top: 0; right: 0; bottom: var(--sb-w); width: var(--sb-w); }
-.sb-h { position: absolute; left: 0; right: var(--sb-w); bottom: 0; height: var(--sb-w); }
+/* ---- folder header row ("N items, X GB available") ----
+   Real Finder chrome atop a folder's icon view. One shared class for both
+   the fixtures (js/fixtures.js macosHeaderRow, absolute + zIndex so it
+   overlays the fixture's own absolutely-positioned icon rectangles without
+   touching their coordinates) and production (js/shell.js
+   macosFolderFurniture, where the row sits in normal flow and folder-view/
+   the vertical scrollbar are pushed down to clear it -- html.fixture guards
+   that push so the fixture's pixel-pinned icon coordinates are untouched). */
+.mac-header-row {
+  position: absolute; left: 0; top: 0; right: 0; height: 21px;
+  background: var(--chrome); color: #000; font-size: var(--ui-size);
+  text-align: center; line-height: 20px; border-bottom: 1px solid var(--chrome-dk);
+  border-top: 1px solid var(--chrome-hi);
+  z-index: 2;
+}
+html:not(.fixture) .win-folder .folder-view {
+  margin-top: 21px; height: calc(100% - 21px);
+}
+html:not(.fixture) .win-folder .sb-v { top: 21px; }
+
+/* ---- scrollbars (document window furniture: sb-v right, sb-h bottom) ----
+   Measured off 02-folder's vertical + horizontal scrollbars: 16px wide
+   (already matched), flat #eeeeee face for BOTH button and track (no
+   separate track shade), a 1px #777777 divider between each button and the
+   track, and a solid (not bevelled) arrow glyph: 8px base, 4px deep,
+   #888888, centered. No visible thumb in any reference state (see
+   VERIFICATION/wave-2 notes), so .sb-thumb is left unstyled beyond position
+   (production-only, unverified against a reference). */
+/* bottom: 5px, not 0: leaves room for win-body's own 5px sunken-well bevel
+   (see .win-body above) below the horizontal scrollbar / grow box row. */
+.sb { background: var(--sb-face); }
+.sb-v { position: absolute; top: 0; right: 0; bottom: calc(var(--sb-w) + 5px); width: var(--sb-w);
+        border-left: 1px solid var(--chrome-dk); box-sizing: border-box; }
+.sb-h { position: absolute; left: 0; right: var(--sb-w); bottom: 5px; height: var(--sb-w);
+        border-top: 1px solid var(--chrome-dk); box-sizing: border-box; }
 .sb-btn {
-  width: var(--sb-w); height: var(--sb-w); background: var(--chrome);
-  border: 1px solid var(--chrome-dk);
-  box-shadow: inset 1px 1px 0 var(--chrome-hi), inset -1px -1px 0 var(--chrome-lo);
+  width: var(--sb-w); height: var(--sb-w); background: var(--sb-face);
+  display: flex; align-items: center; justify-content: center;
 }
+.sb-v .sb-up { border-bottom: 1px solid var(--sb-divider); }
+.sb-v .sb-down { border-top: 1px solid var(--sb-divider); }
+.sb-h .sb-left { border-right: 1px solid var(--sb-divider); }
+.sb-h .sb-right { border-left: 1px solid var(--sb-divider); }
+.sb-btn::after { content: ''; width: 0; height: 0; }
+.sb-up::after { border-left: 4px solid transparent; border-right: 4px solid transparent; border-bottom: 4px solid var(--sb-arrow); }
+.sb-down::after { border-left: 4px solid transparent; border-right: 4px solid transparent; border-top: 4px solid var(--sb-arrow); }
+.sb-left::after { border-top: 4px solid transparent; border-bottom: 4px solid transparent; border-right: 4px solid var(--sb-arrow); }
+.sb-right::after { border-top: 4px solid transparent; border-bottom: 4px solid transparent; border-left: 4px solid var(--sb-arrow); }
 .sb-track {
-  flex: 1 1 auto; position: relative; background: var(--chrome);
-  box-shadow: inset 1px 1px 0 var(--chrome-hi), inset -1px -1px 0 var(--chrome-lo);
+  flex: 1 1 auto; position: relative; background: var(--sb-face);
 }
-.sb-thumb { position: absolute; left: 0; right: 0; background: var(--chrome-lo); border: 1px solid var(--chrome-dk); }
+.sb-v .sb-track { border-top: 1px solid var(--sb-divider); border-bottom: 1px solid var(--sb-divider); }
+.sb-h .sb-track { border-left: 1px solid var(--sb-divider); border-right: 1px solid var(--sb-divider); }
+.sb-thumb { position: absolute; left: 0; right: 0; background: var(--win-shade); border: 1px solid var(--chrome-dk); }
 .iframe-clip { right: var(--sb-w); bottom: var(--sb-w); }
-/* grow box: bottom-right corner of document windows only (see createWindow) */
+/* grow box: bottom-right corner (folder AND doc windows; see createWindow).
+   Measured art is a small DIAMOND checkerboard glyph, not a uniform
+   diagonal hatch -- a CSS repeating-gradient approximation measured further
+   from the reference, so this is a direct 1:1 extraction (per the brief's
+   "extract when CSS can't reach" rule) like OS/2's corner sprites.
+   bottom:5px (not 0): the reference's glyph sits flush above the win-body
+   bottom bevel (see .win-body above), not overlapping it -- unlike the
+   right edge, where it does run into the bevel, so right stays 0. */
 .resize-corner {
-  position: absolute; right: 0; bottom: 0; z-index: 4; pointer-events: none;
-  width: var(--sb-w); height: var(--sb-w); background: var(--chrome);
-  background-image: repeating-linear-gradient(135deg,
-    var(--chrome-lo) 0, var(--chrome-lo) 1px, transparent 1px, transparent 3px);
+  position: absolute; right: 0; bottom: 5px; z-index: 4; pointer-events: none;
+  width: var(--sb-w); height: var(--sb-w);
+  background: url('../icons/macos/growbox.png');
+  image-rendering: pixelated;
 }
 
 /* ---- editor / doc ----
    Production doc windows are the poem iframe (see openDoc/buildDocScrollbars
-   in shell.js); no synthetic editor-text view outside the fixtures. */
+   in shell.js); no synthetic editor-text view outside the fixtures.
+   .editor-text/.editor-line ARE used by the 04-document fixture (SimpleText
+   poem body) -- measured against the reference: text starts ~8px from the
+   left edge (base.css's plain inset:0 put it ~2px too close) and the line
+   pitch reads tighter than the browser's default line-height at 12px Geneva. */
 .doc-view { background: var(--content-bg); }
+.editor-text { padding: 2px 0 0 8px; }
+/* height, not just line-height: base.css's .editor-line has min-height:1em
+   (12px), which under-sizes the poem's BLANK line (no text content to force
+   a full line-height box) and throws off every line pitch below it -- an
+   explicit height makes every row (blank or not) the same measured 16px. */
+.editor-line { line-height: 16px; height: 16px; }
 
 /* ---- dialogs / buttons ----
    Button box MEASURED off reference/macos/06-dialog.png: scanned rows 145-
