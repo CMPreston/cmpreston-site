@@ -2,22 +2,30 @@
    pinstriped title bars, a full-width screen-top menu bar (unlike beos/os2,
    which keep their tray/toolbar bar but no File/Edit-style pulldown row).
 
-   STUB / PLACEHOLDER FILE: unlike beos.css and os2.css (values measured off
-   real emulator captures), this skin has no reference screenshots yet — it
-   is not part of the pixel-diff suite. Every color, bevel and font value
-   below is a plausible placeholder pending that future pixel-fidelity pass:
-   face greys in the #dddddd range, 1px black hairline outlines, white/dark
-   bevels, a repeating-linear-gradient standing in for the real pinstripe
-   title bar, a 20px menu bar, 'system-ui, Helvetica' standing in for
-   Charcoal/Chicago. Structural rules (sizing that shell.js's layout math
-   depends on, e.g. the 20px bar height) are load-bearing now; cosmetics are
-   not. Every tunable value lives in :root. */
+   Wave 2 added real references (reference/macos/*.png, our own SheepShaver
+   captures) and the fixtures; wave 3 (this pass) is the pixel-fidelity tune
+   for 01/05/06 plus measured production styling for the menus, the alert
+   dialog and desktop labels (02/03/04 chrome is a parallel pass elsewhere).
+   Values below are MEASURED via PIL pixel sampling against the references
+   and the raw menu/dialog captures (reference/raw/macos-emulator/*.png) --
+   see the inline comments at each rule for what was sampled and where. A few
+   corners remain plausible-not-measured placeholders where no reference
+   shows the case (noted individually, e.g. --title-pin-a/b: the in-window
+   title bar pinstripe, which the 02/03/04 pass owns). Every tunable value
+   lives in :root. */
 
 :root {
   /* desktop */
   --desk-bg: #63639c;        /* wallpaper base RGB(99,99,156), measured off 01-desktop */
   --desk-label-fg: #000000;  /* classic Mac desktop labels: black text, not white */
-  --sel-bg: #000080;         /* placeholder selection navy */
+  --desk-label-bg: #cfcfe1;  /* MEASURED (208,208,225) behind "Poems"/"Macintosh
+                                 HD" labels in 01-desktop.png; classic Mac OS
+                                 always draws this pale backing box, selected
+                                 or not (selection just swaps it for --sel-bg) */
+  --sel-bg: #333399;         /* Mac OS system highlight color, MEASURED (see
+                                 --menu-hl-bg below, same value): classic Mac
+                                 OS uses ONE highlight color throughout (menu
+                                 titles, icon labels, text selection) */
   --sel-fg: #ffffff;
 
   /* Platinum face + bevels (shared by macbar, windows, menus, buttons) */
@@ -35,11 +43,18 @@
   --title-pin-b: #dddddd;    /* pinstripe dark stripe, placeholder */
   --title-inactive: #dddddd; /* inactive title bar: solid, no pinstripe */
 
-  /* menus */
-  --menu-bg: #ffffff;
+  /* menus: all four values MEASURED off reference/raw/macos-emulator/
+     file-menu-open.png (interior fill + disabled-item/separator samples)
+     and apple-menu-open.png / special-menu-open.png (title highlight, read
+     as a full row scan -- a single-point sample first landed on a black
+     glyph stroke and misreported pure black; the row scan around it showed
+     the true (51,51,153) fill with white lettering) */
+  --menu-bg: #dddddd;        /* MEASURED (221,221,221): same flat chrome grey
+                                 as everything else, NOT white */
   --menu-fg: #000000;
-  --menu-dis-fg: #888888;
-  --menu-hl-bg: #000080;
+  --menu-dis-fg: #777777;    /* MEASURED (119,119,119): disabled item text
+                                 AND the separator rule both sample here */
+  --menu-hl-bg: #333399;     /* MEASURED (51,51,153): open/highlighted title */
   --menu-hl-fg: #ffffff;
 
   /* scrollbars */
@@ -47,6 +62,7 @@
 
   /* type */
   --ui-font: system-ui, Helvetica, Arial, sans-serif;  /* Charcoal-ish stand-in, placeholder */
+  --label-font: Geneva, 'Bitstream Vera Sans', Verdana, Helvetica, Arial, sans-serif;  /* classic Mac desktop/list labels set in Geneva; hinted first, degrades gracefully */
   --ui-size: 12px;
 }
 
@@ -67,16 +83,26 @@ body {
    (see shell.js deskSlots) — both real Finder desktop defaults. */
 .desk-icon { width: 80px; }
 .desk-icon .icon-label { color: var(--desk-label-fg); }
-.icon-label { font-size: var(--ui-size); margin-top: 2px; line-height: 1.1; }
+.icon-label { font-family: var(--label-font); font-size: var(--ui-size); margin-top: 2px; line-height: 1.1; }
+/* pale backing box behind every desktop label, selected or not (MEASURED,
+   see --desk-label-bg); selection swaps it for --sel-bg (higher specificity
+   below, so it still wins over this default) */
+.desk-icon .icon-label span { background: var(--desk-label-bg); padding: 0 2px; }
 .icon.selected .icon-label span { background: var(--sel-bg); color: var(--sel-fg); padding: 0 2px; }
 .grid-icon .icon-label { color: #000; }   /* in a white folder window */
 
 /* ---- menu bar (#macbar, screen-top, 20px) ----
    Apple menu | File Edit View Special Help (via the shared buildMenubar
    helper) | flex spacer | clock | app indicator (icon + "Finder"). */
+/* Measured off reference/macos/*.png (PIL border-scan of the gap between the
+   extracted title band and the clock, x=245..487): row 0 is a 1px white
+   highlight, row 18 (the content area's last row before the black border,
+   under the global border-box reset) is a 1px #999 shadow -- the bar's own
+   Platinum bevel, not just a flat fill. */
 #macbar {
   position: absolute; top: 0; left: 0; width: 100%; height: var(--menubar-h);
   background: var(--chrome); border-bottom: 1px solid var(--chrome-dk);
+  box-shadow: inset 0 1px 0 #ffffff, inset 0 -1px 0 #999999;
   display: flex; align-items: center; z-index: 9000; overflow: hidden;
 }
 .mb-apple {
@@ -84,6 +110,9 @@ body {
   border: 0; background: transparent; padding: 0; cursor: pointer;
   display: flex; align-items: center; justify-content: center;
 }
+/* apple-menu-open.png shows the apple glyph sitting on the same (51,51,153)
+   highlight box as a highlighted File/Special title when its menu is open */
+.mb-apple:hover { background: var(--menu-hl-bg); }
 .mb-apple img { width: 14px; height: 14px; image-rendering: pixelated; }
 /* the shared buildMenubar() helper renders File/Edit/View/Special/Help here;
    base.css only sets display:flex on .menubar, everything else is skin CSS */
@@ -141,18 +170,23 @@ body {
 }
 .win:not(.win-active) .mtb-title { color: var(--title-fg); }
 
-/* ---- menus (pulldowns from #macbar and icon/desktop context menus) ---- */
+/* ---- menus (pulldowns from #macbar and icon/desktop context menus) ----
+   MEASURED off reference/raw/macos-emulator/file-menu-open.png: flat fill
+   (no gradient), a plain 1px border going straight to desktop background
+   with NO drop shadow beyond it (checked columns just past the right border
+   and rows just past the bottom border -- both land on wallpaper, not a
+   shadow tone), and a 16px row pitch (clustered the y-ranges of 18 text
+   rows and diffed consecutive centers: a clean, repeated 16px). */
 .menu {
   background: var(--menu-bg); border: 1px solid var(--chrome-dk);
-  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.3);
   padding: 2px 0; min-width: 140px; font-size: var(--ui-size);
 }
-.menu-item { display: flex; align-items: center; height: 18px; padding: 0 16px 0 20px; color: var(--menu-fg); }
+.menu-item { display: flex; align-items: center; height: 16px; padding: 0 16px 0 20px; color: var(--menu-fg); }
 .menu-item.default .menu-label { font-weight: bold; }
 .menu-item:hover:not(.disabled),
 .menu-item.forced-hover:not(.disabled) { background: var(--menu-hl-bg); color: var(--menu-hl-fg); }
 .menu-item.disabled { color: var(--menu-dis-fg); }
-.menu-sep { height: 1px; margin: 4px 2px; background: var(--chrome-lo); }
+.menu-sep { height: 1px; margin: 4px 2px; background: var(--menu-dis-fg); }
 .menu-arrow { margin-left: 14px; }
 .menu-arrow::after {
   content: ''; display: inline-block; width: 0; height: 0;
@@ -188,38 +222,86 @@ body {
    in shell.js); no synthetic editor-text view outside the fixtures. */
 .doc-view { background: var(--content-bg); }
 
-/* ---- dialogs / buttons ---- */
+/* ---- dialogs / buttons ----
+   Button box MEASURED off reference/macos/06-dialog.png: scanned rows 145-
+   190 for short (non-frame) horizontal black runs to find the Cancel/OK
+   rectangles. Cancel's outer border: ~52px wide x 20px tall (rounded
+   corners: the border's straight run narrows by 2-3px right at the top/
+   bottom rows). OK carries a second, larger rounded rectangle around it --
+   the default-button ring -- roughly 3px further out on every side. */
 .about-simple { background: var(--chrome); }
 .mac-button {
-  font: inherit; font-size: var(--ui-size); min-width: 60px; height: 20px;
-  padding: 2px 10px; background: var(--chrome); color: #000;
+  font: inherit; font-size: var(--ui-size); min-width: 54px; height: 20px;
+  padding: 2px 8px; background: var(--chrome); color: #000;
   border: 1px solid var(--chrome-dk); border-radius: 4px;
   box-shadow: inset 1px 1px 0 var(--chrome-hi), inset -1px -1px 0 var(--chrome-lo);
 }
 .mac-button:active { box-shadow: inset 1px 1px 0 var(--chrome-lo), inset -1px -1px 0 var(--chrome-hi); }
-.default-button { border-width: 2px; }
+/* the ring is an outline (not a border): it doesn't take up layout space, so
+   it can't collide with the neighboring button, matching the reference
+   where Cancel/OK stay the same size and only OK gains the extra ring */
+.default-button { outline: 1px solid var(--chrome-dk); outline-offset: 3px; }
 
 /* system alert (Trash-empty, raised via showAlert(); same function beos
-   uses, see emptyTrashAlert in shell.js) */
+   uses, see emptyTrashAlert in shell.js). shell.js's DOM is a BeOS-shaped
+   left icon-column + text (.alert-body > .alert-stripe > .alert-icon,
+   .alert-body > .alert-content) with no title band at all; real Mac OS
+   alerts are a movable-modal with a full-width striped title band up top
+   and the warning triangle INSIDE the body, left of the message. Reproduced
+   here with CSS only (no shell.js DOM change): flip alert-body to a column
+   so alert-stripe becomes the top band, then pull alert-icon (still a DOM
+   child of alert-stripe) down into the body visually via absolute
+   positioning + overflow:visible. A cleaner fix would move .alert-icon out
+   of .alert-stripe in shell.js's showAlert() -- noted for the sibling/next
+   pass, not done here since js/shell.js is out of this wave's file scope. */
 .win-alert {
   background: var(--chrome); border: 1px solid var(--chrome-dk);
   box-shadow: inset 1px 1px 0 var(--chrome-hi), inset -1px -1px 0 var(--chrome-lo);
   padding: 0;
 }
-.alert-body { display: flex; height: 100%; padding: 8px; position: relative; }
-.alert-stripe { flex: 0 0 40px; }
-.alert-icon { position: absolute; left: 6px; top: 6px; width: 32px; height: 32px; image-rendering: pixelated; }
-.alert-content { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; padding: 4px 6px 6px 20px; }
+.alert-body { display: flex; flex-direction: column; height: 100%; padding: 0; position: relative; }
+/* Movable-modal title band. MEASURED off reference/macos/06-dialog.png: a
+   vertical scan at x=250 through the band reads a clean repeating 1px
+   #ffffff / 1px #ff6666 (255,102,102) pattern -- red/pink in this genuine
+   capture, not the grey a memory-only guess would reach for. Band height
+   ~20px (the reference's own title area is y=67..86, inside its y=66..191
+   frame). */
+.alert-stripe {
+  flex: 0 0 20px; width: 100%; position: relative; overflow: visible;
+  background: repeating-linear-gradient(180deg,
+    #ffffff 0px, #ffffff 1px, #ff6666 1px, #ff6666 2px);
+  border-bottom: 1px solid var(--chrome-dk);
+}
+/* extracted standalone (icons/macos/alert-icon.png; tools/make_icons.py --
+   named to match shell.js's showAlert(), which hardcodes iconPath('alert-
+   icon') for every skin), positioned by eye against the alert-stripe/
+   alert-content proportions since the production alert (317px default
+   width) isn't the same size as the 375px-wide reference dialog the icon
+   was measured from */
+.alert-icon {
+  position: absolute; left: 16px; top: 30px; width: 33px; height: 32px;
+  image-rendering: pixelated;
+}
+.alert-content { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; padding: 14px 14px 12px 58px; }
 .alert-text { font-size: var(--ui-size); line-height: 15px; }
-.alert-buttons { margin-top: auto; display: flex; justify-content: flex-end; gap: 8px; padding-top: 8px; }
+.alert-buttons { margin-top: auto; display: flex; justify-content: flex-end; gap: 12px; padding-top: 8px; }
 
-/* ---- mobile ---- */
-body.mobile { background: var(--desk-bg); }
+/* ---- mobile ----
+   Minimal restyle so the phone fallback reads as the same skin rather than
+   a generic grey page: the same wallpaper tile as the desktop behind the
+   list, and the same Platinum bevel (#macbar's measured white-top/grey-
+   bottom inset) on both bars so they read as raised Platinum strips. */
+body.mobile { background: var(--desk-bg) url('../icons/macos/pattern.png') 0 -40px repeat; }
 .m-head {
   background: var(--chrome); color: #000; font-weight: bold; padding: 12px;
-  border-bottom: 1px solid var(--chrome-dk); display: flex;
-  justify-content: space-between; align-items: center;
+  border-bottom: 1px solid var(--chrome-dk);
+  box-shadow: inset 0 1px 0 #ffffff, inset 0 -1px 0 #999999;
+  display: flex; justify-content: space-between; align-items: center;
 }
 .m-row { background: var(--content-bg); border-bottom: 1px solid var(--chrome-lo); color: #000; }
-.m-bar { background: var(--chrome); color: #000; padding: 10px; font-weight: bold; border-bottom: 1px solid var(--chrome-dk); }
+.m-bar {
+  background: var(--chrome); color: #000; padding: 10px; font-weight: bold;
+  border-bottom: 1px solid var(--chrome-dk);
+  box-shadow: inset 0 1px 0 #ffffff, inset 0 -1px 0 #999999;
+}
 .m-foot { padding: 14px; color: #333333; font-size: 12px; }
