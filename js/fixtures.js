@@ -622,11 +622,278 @@ FIXTURES.os2 = {
   }
 };
 
-// macos: stub skin, no fixtures yet (pixel-fidelity pass adds them later).
-// Kept empty rather than omitted so FIXTURES[SKIN] is still a real object and
-// ?skin=macos&fixture=anything degrades gracefully through the warn path
-// below instead of throwing on a missing key.
-FIXTURES.macos = {};
+// ---- Mac OS 8.6 (Platinum-ish, British localization) --------------------
+// Wave 2: measurement + fixtures + assets. References are our own SheepShaver
+// captures at 640x480, Millions of colors (verify/macos_rig/RIG.md). Every
+// position below comes from PIL pixel measurement (see the wave-2 report),
+// not eyeballing. Content-parity honesty per VERIFICATION.md: these fixtures
+// mirror the reference's CONTENT (icon names/positions, window geometry,
+// strings, clock reading); wave 3 tunes the CSS chrome values (title-bar
+// height, colors, fonts) the diff% says still need work. Windows use
+// SHELL.createWindow (macos chrome) like beos/os2; extracted-image overlays
+// are used only where CSS can't plausibly reach: menu-bar text bands (the
+// bitmap system font), the context menu and dialog (bitmap text + bevels),
+// per-state clock crops, cursors and the desktop icon+label rectangles (they
+// carry the patterned wallpaper, so placement must be exact -- same reason
+// OS/2's desktop icons are extracted rectangles, not CSS + PNG glyph).
+
+// Desktop icon+label whole rectangles, placed 1:1 at their measured screen
+// position. All nine are the real Mac OS 8.6 Easy-Install default desktop
+// content EXCEPT 'unix': that one is a SheepShaver host-mount artifact, not
+// authentic Mac OS content, frozen into the ground-truth captures -- it must
+// still be replicated here for content parity, but it is deliberately never
+// added to the production icon set (see tools/make_icons.py).
+var MACOS_DESKTOP_ICONS = [
+  ['desktop-register',     411, 25],
+  ['desktop-macintoshhd',  554, 44],
+  ['desktop-doorpoem',     415, 89],
+  ['desktop-unix',         573, 108],
+  ['desktop-poems',        571, 153],
+  ['desktop-browsenet',    538, 218],
+  ['desktop-quicktime',    542, 281],
+  ['desktop-mail',         573, 345],
+  ['desktop-wastebasket',  557, 409]
+];
+
+function macosImg(parent, src, x, y, z) {
+  var im = el('img', null, parent);
+  im.src = 'icons/macos/' + src + '.png';
+  im.draggable = false;
+  im.style.cssText = 'position:absolute;left:' + x + 'px;top:' + y +
+                     'px;image-rendering:pixelated' + (z ? ';z-index:' + z : '');
+  return im;
+}
+
+function macosDesktopIcons() {
+  MACOS_DESKTOP_ICONS.forEach(function (sp) { macosImg(desktop, sp[0], sp[1], sp[2], 1); });
+}
+
+// Control Strip, bottom-left docked bar. Measured byte-identical across all
+// six states, so one extraction (from 01) serves every fixture.
+function macosControlStrip() {
+  macosImg(desktop, 'controlstrip', 0, 454, 1);
+}
+
+// Screen-top menu bar. The live #macbar (ticking clock, always-Finder-menu)
+// that shell.js's own renderDesktop() builds is already gone by the time a
+// fixture runs clearDesktop() (it wipes desktop.innerHTML, and #macbar is a
+// child of #desktop) -- so fixtures rebuild the bar entirely from measured
+// content. left/clock/app are extracted bands (see tools/make_icons.py);
+// clockX/appX differ because the app-indicator's width tracks the app name
+// length ("Finder" vs "SimpleText"), which pushes the clock left of it.
+function macosMenuBar(opts) {
+  var mb = el('div', null, desktop);
+  mb.id = 'macbar';
+  mb.style.position = 'relative';
+  macosImg(mb, opts.left, 0, 0);
+  macosImg(mb, opts.clock, opts.clockX, 0);
+  macosImg(mb, opts.app, opts.appX, 0);
+  return mb;
+}
+function macosFinderBar(clockSrc) {
+  return { left: 'menubar-left-finder', clockX: 488, clock: clockSrc,
+           app: 'menubar-app-finder', appX: 547 };
+}
+
+// Folder window header band ("N items, X GB available"): real Mac Finder
+// chrome, but shell.js has no structural hook for it yet (out of this wave's
+// file scope), so the fixture builds it inline rather than adding CSS. Sits
+// atop body (which spans title-bar-bottom to window-bottom, per
+// SHELL.createWindow); folder-view fills the same body underneath it.
+function macosHeaderRow(body, text) {
+  var row = el('div', null, body);
+  row.textContent = text;
+  row.style.cssText = 'position:absolute;left:0;top:0;right:0;height:21px;' +
+    'background:#dddddd;color:#000;font-size:12px;text-align:center;' +
+    'line-height:21px;border-bottom:1px solid #000;box-sizing:border-box;z-index:2';
+  return row;
+}
+
+// Folder body furniture shared by Poems/Demos: header row + icon grid +
+// scrollbars (existing generic .sb/.sb-v/.sb-h classes, already positioned
+// and skinned by base.css/macos.css) + the resize/grow box (existing
+// .resize-corner class; shell.js only auto-adds it for 'doc' windows, so
+// folder fixtures add their own here, same class, no new CSS).
+function macosFolderContent(iconsList, headerText) {
+  return function (body) {
+    macosHeaderRow(body, headerText);
+    var view = el('div', 'folder-view', body);
+    iconsList.forEach(function (sp) { gridIcon(view, sp); });
+    var vsb = el('div', 'sb sb-v', body);
+    vsb.style.top = '21px';   // clears the header row; base.css's sb-v defaults to top:0
+    el('div', 'sb-btn sb-up', vsb);
+    el('div', 'sb-track', vsb);
+    el('div', 'sb-btn sb-down', vsb);
+    var hsb = el('div', 'sb sb-h', body);
+    el('div', 'sb-btn sb-left', hsb);
+    el('div', 'sb-track sb-track-h', hsb);
+    el('div', 'sb-btn sb-right', hsb);
+    el('div', 'resize-corner', body);
+  };
+}
+
+// 03-nested only: the Poems content behind Demos. Its one child (Demos) is
+// showing in the darkened "opened" state -- extracted whole (see addendum;
+// tools/make_icons.py demos-opened.png), clipped exactly as the reference
+// shows it (the Demos window in front covers the rest; z-order reproduces
+// that automatically once both windows are positioned).
+function macosOpenedFolderContent(headerText) {
+  return function (body) {
+    macosHeaderRow(body, headerText);
+    el('div', 'folder-view', body);
+    macosImg(body, 'demos-opened', 27, 26, 1);
+    var vsb = el('div', 'sb sb-v', body);
+    vsb.style.top = '21px';
+    el('div', 'sb-btn sb-up', vsb);
+    el('div', 'sb-track', vsb);
+    el('div', 'sb-btn sb-down', vsb);
+    var hsb = el('div', 'sb sb-h', body);
+    el('div', 'sb-btn sb-left', hsb);
+    el('div', 'sb-track sb-track-h', hsb);
+    el('div', 'sb-btn sb-right', hsb);
+    el('div', 'resize-corner', body);
+  };
+}
+
+// SimpleText document body: real text via the shared .editor-text/.editor-
+// line/.editor-caret classes (base.css), same idiom as beos's 04-document --
+// content parity through actual characters, not a bitmap, since wave 3 owns
+// whether the system font needs a swap. Vertical scrollbar only: the
+// reference shows no horizontal bar on this window (see wave-2 report).
+function macosEditorContent(body) {
+  body.classList.add('editor-body');
+  var txt = el('div', 'editor-text', body);
+  ['what the door does', '', 'I closed the door',
+   'and the room remembered being a box.'].forEach(function (ln) {
+    el('div', 'editor-line', txt).textContent = ln;
+  });
+  var last = el('div', 'editor-line', txt);
+  el('span', 'editor-caret', last);
+  var vsb = el('div', 'sb sb-v', body);
+  el('div', 'sb-btn sb-up', vsb);
+  el('div', 'sb-track', vsb);
+  el('div', 'sb-btn sb-down', vsb);
+}
+
+// The Control-click desktop context menu, verbatim (Help/New Folder/View>/
+// Clean Up/Arrange>/View Options…/Change Desktop Background…). No verbatim
+// production menu to mirror here (these are the site's own entries, per
+// shell.js's desktopMenuItems macos branch), so plain labels, no mnemonics.
+var MACOS_DESKTOP_MENU = [
+  { label: 'Help' },
+  { label: 'New Folder' },
+  { sep: true },
+  { label: 'View', sub: [{ label: 'as Icons', checked: true }] },
+  { label: 'Clean Up' },
+  { label: 'Arrange', sub: [{ label: 'by Name' }] },
+  { label: 'View Options…' },
+  { sep: true },
+  { label: 'Change Desktop Background…' }
+];
+
+FIXTURES.macos = {
+  // Bare desktop: the Easy-Install default icon set + Control Strip + Apple
+  // menu bar, clock pinned to the reference's own reading, arrow cursor at
+  // its measured resting position.
+  '01-desktop': function () {
+    clearDesktop();
+    macosDesktopIcons();
+    macosControlStrip();
+    macosMenuBar(macosFinderBar('menubar-clock-01'));
+    cursor(307, 255);
+  },
+
+  // Poems window (active, striped title), Demos folder icon inside, header
+  // "1 item, 1.7 GB available". Body height = window-bottom - title-bottom
+  // (224), measured directly, not derived from the current CSS placeholder
+  // --titlebar-h (19px; the reference measures 22px -- flag for wave 3).
+  '02-folder': function () {
+    clearDesktop();
+    macosDesktopIcons();
+    macosControlStrip();
+    macosMenuBar(macosFinderBar('menubar-clock-02'));
+    fxWindow({
+      kind: 'folder', title: 'Poems', x: 7, y: 25, w: 417, h: 224,
+      content: macosFolderContent(
+        [{ icon: 'folder', label: 'Demos', x: 27, y: 26 }],
+        '1 item, 1.7 GB available')
+    });
+    cursor(258, 176);
+  },
+
+  // Poems (inactive: flat title fill, no pinstripe, box row hidden -- real
+  // Mac OS hides close/collapse/zoom entirely on a background window, per
+  // css/macos.css) behind Demos (active, dragged/cascaded). RIG.md: opening
+  // a child folder reuses the parent's exact frame, then the title bar was
+  // dragged by hand to the cascade position seen here -- confirmed by
+  // measurement: Poems sits at the IDENTICAL (7,25,417,*) as state 02.
+  '03-nested': function () {
+    clearDesktop();
+    macosDesktopIcons();
+    macosControlStrip();
+    macosMenuBar(macosFinderBar('menubar-clock-03'));
+    fxWindow({
+      kind: 'folder', title: 'Poems', x: 7, y: 25, w: 417, h: 224,
+      active: false,
+      content: macosOpenedFolderContent('1 item, 1.7 GB available')
+    });
+    fxWindow({
+      kind: 'folder', title: 'Demos', x: 57, y: 75, w: 416, h: 224,
+      content: macosFolderContent([], '0 items, 1.7 GB available')
+    });
+    cursor(260, 82);
+  },
+
+  // SimpleText, "what the door does" -- same poem text as the beos/os2
+  // 04-document states. Window is flush to the screen's left edge and
+  // touches the system menu bar's own bottom border (x=0,y=20); the
+  // reference's own menu bar swaps to SimpleText's File/Edit/Font/Size/
+  // Style/Sound/Help and its own app-indicator (see macosMenuBar call).
+  // I-beam pointer mid-client, not the arrow (real Mac OS swaps the cursor
+  // over a text view); no cursor() helper call since that hardcodes
+  // icons/macos/cursor.png, not the ibeam.
+  '04-document': function () {
+    clearDesktop();
+    macosDesktopIcons();
+    macosControlStrip();
+    macosMenuBar({ left: 'menubar-left-simpletext', clockX: 458,
+                   clock: 'menubar-clock-04', app: 'menubar-app-simpletext', appX: 518 });
+    fxWindow({
+      kind: 'doc', title: 'what the door does', x: 0, y: 20, w: 583, h: 407,
+      content: macosEditorContent
+    });
+    macosImg(desktop, 'ibeam', 435, 234, 99999);
+  },
+
+  // Control-click contextual menu on bare desktop; cursor at the invocation
+  // point (the menu's own top-left corner, per the reference).
+  '05-context-menu': function () {
+    clearDesktop();
+    macosDesktopIcons();
+    macosControlStrip();
+    macosMenuBar(macosFinderBar('menubar-clock-05'));
+    S.showMenu(MACOS_DESKTOP_MENU, 308, 206);
+    cursor(307, 205);
+  },
+
+  // The real "Wastebasket contains 1 item... remove it permanently?" alert,
+  // shipped as one extracted rectangle per the brief (its pinstriped title
+  // strip renders pink/red under SheepShaver's genuine Toolbox drawing code
+  // at Millions-of-colors depth -- kept as observed, not "corrected"; see
+  // verify/macos_rig/RIG.md). The menu bar's File/Edit/View/Special titles
+  // dim (measured: ink goes from pure black to (119,119,119) grey) while a
+  // modal alert holds focus; the Apple logo and the Finder app-indicator do
+  // NOT dim (measured byte-identical to every other Finder state).
+  '06-dialog': function () {
+    clearDesktop();
+    macosDesktopIcons();
+    macosControlStrip();
+    macosMenuBar({ left: 'menubar-left-finder-dim', clockX: 488,
+                   clock: 'menubar-clock-06', app: 'menubar-app-finder', appX: 547 });
+    macosImg(desktop, 'dialog-wastebasket', 131, 85, 9600);
+    cursor(239, 27);
+  }
+};
 
 var fn = FIXTURES[SKIN] && FIXTURES[SKIN][id];
 if (fn) fn(); else console.warn('unknown fixture', SKIN, id);
