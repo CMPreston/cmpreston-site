@@ -72,7 +72,7 @@ var SKINS = {
   },
   macos: {
     displayName: 'Mac OS',
-    trashName: 'Trash',
+    trashName: 'Wastebasket',   // UK CD localization, verified in wave-3 reference pixels
     folderTitleSuffix: '',
     topBar: buildMenuBar,
     clockFormat: 'ampm',
@@ -431,7 +431,26 @@ function createWindow(opts) {
     // right for free, no explicit position math needed.
     var mtb = el('div', 'titlebar-mac', node);
     el('div', 'mtb-close', mtb).addEventListener('click', function () { closeWindow(win); });
-    el('div', 'mtb-title', mtb).textContent = opts.title;
+    // .mtb-title is a flex container that CENTERS a fitted inner pill
+    // (.mtb-title-fit): the reference shows the title's icon+text sitting on
+    // a solid face-colored patch sized to their own content, not a band
+    // spanning the full flex:1 remaining width (that would paint over the
+    // pinstripe well past the text on both sides).
+    var mtitle = el('div', 'mtb-title', mtb);
+    var fit = el('div', 'mtb-title-fit', mtitle);
+    // Finder/SimpleText "proxy icon": the window's own item icon, small,
+    // immediately left of the title text (measured in the wave-3 reference:
+    // present on every folder/doc title, ~14px, no visible bevel/frame of
+    // its own -- just the plain icon art). about/alert windows have no
+    // backing item, so they get no proxy icon (matches beos/os2, which also
+    // only icon their own sysmenu for real windows).
+    var proxyIcon = { folder: 'folder', doc: 'doc' }[opts.kind];
+    if (proxyIcon) {
+      var pi = el('img', 'mtb-icon', fit);
+      pi.src = iconPath(proxyIcon);
+      pi.alt = ''; pi.draggable = false;
+    }
+    fit.appendChild(document.createTextNode(opts.title));
     el('div', 'mtb-collapse', mtb).addEventListener('click', function (e) {
       e.stopPropagation(); winShade(win);
     });
@@ -446,15 +465,23 @@ function createWindow(opts) {
   var body = el('div', 'win-body', inner);
   if (h != null) body.style.height = h + 'px';
   opts.content(body, win);
-  // beos: every window kind. macos: doc windows only (a Mac OS grow box);
-  // folder windows still resize via the invisible .rz-* handles, just with
-  // no decorative corner glyph yet (pixel pass can add one).
-  if (SKIN === 'beos' || (SKIN === 'macos' && opts.kind === 'doc')) el('div', 'resize-corner', inner);
+  // beos: every window kind. macos: folder AND doc windows both get the
+  // Platinum grow box (confirmed in wave-3 reference pixels: folder windows
+  // DO show the bottom-right resize corner, not just doc windows).
+  if (SKIN === 'beos' || (SKIN === 'macos' && (opts.kind === 'doc' || opts.kind === 'folder'))) el('div', 'resize-corner', inner);
 
   node.addEventListener('pointerdown', function () { focusWindow(win); }, true);
   makeDraggable(win, handle);
   if (opts.kind === 'folder' || opts.kind === 'doc') makeResizable(win);
   windows.push(win);
+  // Every window gets a baseline stacking position, active or not: desktop
+  // icons render with an explicit z-index (see makeIcon/macosImg) so they
+  // stack by that number rather than DOM order, which otherwise put them
+  // above an unfocused window (auto z-index loses to any explicit one)
+  // wherever the two overlap -- visible as icon art bleeding through a
+  // background window's frame. zTop only advances on focusWindow, so an
+  // inactive window still stacks below whatever's focused after it.
+  node.style.zIndex = ++zTop;
   if (opts.active !== false) focusWindow(win);
   return win;
 }
@@ -701,8 +728,31 @@ function openFolder(item) {
         beosFolderFurniture(body, win,
           n === 1 ? '1 item' : n + ' items');
       }
+      if (SKIN === 'macos') {
+        macosFolderFurniture(body, n);
+      }
     }
   });
+}
+
+// Mac Finder-style furniture: the "N items, X GB available" header row (real
+// production chrome, fed by the manifest's own children count) plus the
+// vertical + horizontal scrollbars (existing .sb classes, skinned by
+// macos.css; .win-folder .sb-v's top:21px offset clears the header, see
+// macos.css). The free-space figure is a fixed, period-plausible placeholder
+// -- this is a static demo site with no real volume to query -- matching the
+// figure the wave-3 pixel fixtures themselves pin for 02/03.
+function macosFolderFurniture(body, n) {
+  var row = el('div', 'mac-header-row', body);
+  row.textContent = (n === 1 ? '1 item' : n + ' items') + ', 1.7 GB available';
+  var vsb = el('div', 'sb sb-v', body);
+  el('div', 'sb-btn sb-up', vsb);
+  el('div', 'sb-track', vsb);
+  el('div', 'sb-btn sb-down', vsb);
+  var hsb = el('div', 'sb sb-h', body);
+  el('div', 'sb-btn sb-left', hsb);
+  el('div', 'sb-track sb-track-h', hsb);
+  el('div', 'sb-btn sb-right', hsb);
 }
 
 function beosFolderMenubar() {
@@ -1021,7 +1071,26 @@ function buildMenuBar() {
   appImg.addEventListener('error', function () { appImg.remove(); });
   el('span', null, app).textContent = 'Finder';
   mb.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+  macosControlStrip();
   return mb;
+}
+
+// Control Strip: a decorative, non-interactive desktop element (the
+// extracted bottom-left toolbar strip), the macos analog of os2's WarpCenter
+// bar image. Docked to the viewport's bottom-left corner (not a fixed
+// 454px-from-top offset like the 640x480 pixel-diff fixtures use) so it
+// stays put across window/viewport sizes; no z-index of its own, so windows
+// (which get an explicit z-index >= 11 on focus) stack above it by default,
+// same as the reference shows a focused document window's own frame
+// overlapping the strip's top edge (see fixtures.js macosControlStrip).
+function macosControlStrip() {
+  var cs = el('img', null, desktop);
+  cs.id = 'controlstrip';
+  cs.alt = '';
+  cs.draggable = false;
+  cs.src = iconPath('controlstrip');
+  cs.style.cssText = 'position:absolute;left:0;bottom:0;image-rendering:pixelated;pointer-events:none';
+  return cs;
 }
 
 function macosAppleMenuItems() {

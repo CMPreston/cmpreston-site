@@ -664,14 +664,40 @@ function macosImg(parent, src, x, y, z) {
   return im;
 }
 
-function macosDesktopIcons() {
-  MACOS_DESKTOP_ICONS.forEach(function (sp) { macosImg(desktop, sp[0], sp[1], sp[2], 1); });
+// opts.noDoorpoem: 02/03 references were captured BEFORE "what the door
+// does" existed as a document -- omit that desktop icon for content parity
+// (wave-3 fixture-content fix; confirmed by direct pixel diff against 01,
+// which HAS the icon at this box: bbox (0,0,95,51) differs almost totally).
+// opts.poemsOpened: while the Poems window is open (02, 03), the reference
+// desktop shows the Poems icon itself darkened ("window is open" tint, a
+// real Finder behavior). Pass 'sel' (02: Poems was just double-clicked open
+// and is still the current selection, black label) or 'unsel' (03: focus
+// moved to Demos afterward, deselecting the Poems desktop icon, light
+// label) -- these are genuinely different crops, not a shared one (an
+// earlier pass wrongly assumed 02 and 03 matched byte-for-byte here).
+function macosDesktopIcons(opts) {
+  opts = opts || {};
+  MACOS_DESKTOP_ICONS.forEach(function (sp) {
+    var name = sp[0];
+    if (opts.noDoorpoem && name === 'desktop-doorpoem') return;
+    if (opts.poemsOpened && name === 'desktop-poems') {
+      name = 'desktop-poems-opened' + (opts.poemsOpened === 'unsel' ? '-unsel' : '');
+    }
+    macosImg(desktop, name, sp[1], sp[2], 1);
+  });
 }
 
-// Control Strip, bottom-left docked bar. Measured byte-identical across all
-// six states, so one extraction (from 01) serves every fixture.
-function macosControlStrip() {
-  macosImg(desktop, 'controlstrip', 0, 454, 1);
+// Control Strip, bottom-left docked bar. Measured byte-identical across
+// 01/02/03/05/06 (one extraction from 01 serves those). 04 is the exception:
+// the SimpleText document window is genuinely tall enough that its own
+// bottom-left frame bevel overlaps the strip's top ~14 rows in the reference
+// (confirmed by direct pixel diff: ref01 vs ref04 differ across the full
+// 370x14 top band there, not just an "8x8 corner" -- corrected from an
+// imprecise wave-2 comment). Rather than model that overlap in CSS, 04 gets
+// its own per-state crop (already the true composited pixels) placed ABOVE
+// the window's z-index so it wins regardless of what renders underneath.
+function macosControlStrip(variant) {
+  macosImg(desktop, variant || 'controlstrip', 0, 454, variant ? 9000 : 1);
 }
 
 // Screen-top menu bar. The live #macbar (ticking clock, always-Finder-menu)
@@ -701,11 +727,8 @@ function macosFinderBar(clockSrc) {
 // atop body (which spans title-bar-bottom to window-bottom, per
 // SHELL.createWindow); folder-view fills the same body underneath it.
 function macosHeaderRow(body, text) {
-  var row = el('div', null, body);
+  var row = el('div', 'mac-header-row', body);
   row.textContent = text;
-  row.style.cssText = 'position:absolute;left:0;top:0;right:0;height:21px;' +
-    'background:#dddddd;color:#000;font-size:12px;text-align:center;' +
-    'line-height:21px;border-bottom:1px solid #000;box-sizing:border-box;z-index:2';
   return row;
 }
 
@@ -741,7 +764,12 @@ function macosOpenedFolderContent(headerText) {
   return function (body) {
     macosHeaderRow(body, headerText);
     el('div', 'folder-view', body);
-    macosImg(body, 'demos-opened', 27, 26, 1);
+    // demos-opened.png was cropped at absolute screen box (30,70,58,118) (see
+    // tools/make_icons.py); win-body's own absolute origin is (13,47) (.win's
+    // 5px left inset + 1px border; titlebar's 22px total), so it place here
+    // at the relative offset (30-13, 70-47) = (17,23), not the (27,26) an
+    // earlier pass carried over from the unrelated grid-icon spec below.
+    macosImg(body, 'demos-opened', 17, 23, 1);
     var vsb = el('div', 'sb sb-v', body);
     vsb.style.top = '21px';
     el('div', 'sb-btn sb-up', vsb);
@@ -809,7 +837,7 @@ FIXTURES.macos = {
   // --titlebar-h (19px; the reference measures 22px -- flag for wave 3).
   '02-folder': function () {
     clearDesktop();
-    macosDesktopIcons();
+    macosDesktopIcons({ noDoorpoem: true, poemsOpened: 'sel' });
     macosControlStrip();
     macosMenuBar(macosFinderBar('menubar-clock-02'));
     fxWindow({
@@ -829,7 +857,7 @@ FIXTURES.macos = {
   // measurement: Poems sits at the IDENTICAL (7,25,417,*) as state 02.
   '03-nested': function () {
     clearDesktop();
-    macosDesktopIcons();
+    macosDesktopIcons({ noDoorpoem: true, poemsOpened: 'unsel' });
     macosControlStrip();
     macosMenuBar(macosFinderBar('menubar-clock-03'));
     fxWindow({
@@ -838,7 +866,9 @@ FIXTURES.macos = {
       content: macosOpenedFolderContent('1 item, 1.7 GB available')
     });
     fxWindow({
-      kind: 'folder', title: 'Demos', x: 57, y: 75, w: 416, h: 224,
+      // w corrected 416->417 (measured: right border at x472-473, i.e. the
+      // same 417 outer width as Poems, not one narrower).
+      kind: 'folder', title: 'Demos', x: 57, y: 75, w: 417, h: 224,
       content: macosFolderContent([], '0 items, 1.7 GB available')
     });
     cursor(260, 82);
@@ -855,11 +885,21 @@ FIXTURES.macos = {
   '04-document': function () {
     clearDesktop();
     macosDesktopIcons();
-    macosControlStrip();
+    macosControlStrip('controlstrip-04');
     macosMenuBar({ left: 'menubar-left-simpletext', clockX: 458,
                    clock: 'menubar-clock-04', app: 'menubar-app-simpletext', appX: 518 });
+    // h corrected 407->427 (the wave-2 measured value, per VERIFICATION/
+    // CLAUDE.md's own WAVE-2 MEASURED VALUES note) -- with the true 427 the
+    // window's own bottom-left frame reaches down far enough to overlap the
+    // Control Strip's top rows, matching the reference (see
+    // macosControlStrip's per-state 'controlstrip-04' comment above).
+    // x,y corrected 0,20 -> -2,19: the reference's own left-edge bevel is
+    // missing its outer border+highlight rings (starts straight at the face
+    // ring), and its title bar is missing its own top highlight row -- both
+    // measured symptoms of the window sitting 2px left / 1px up off its
+    // naive (0,20) position, so those two rings render off-screen.
     fxWindow({
-      kind: 'doc', title: 'what the door does', x: 0, y: 20, w: 583, h: 407,
+      kind: 'doc', title: 'what the door does', x: -1, y: 19, w: 583, h: 427,
       content: macosEditorContent
     });
     macosImg(desktop, 'ibeam', 435, 234, 99999);
