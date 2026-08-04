@@ -664,8 +664,16 @@ function macosImg(parent, src, x, y, z) {
   return im;
 }
 
-function macosDesktopIcons() {
-  MACOS_DESKTOP_ICONS.forEach(function (sp) { macosImg(desktop, sp[0], sp[1], sp[2], 1); });
+// wastebasketVariant: at capture time for 05/06 the throwaway file was
+// already in the bin, so those two references show the FULL can (crumpled
+// paper visible), not the empty-lid state 01/02/03/04 show. Same screen
+// rectangle either way (tools/make_icons.py OS2_RECTS-style 1:1 placement);
+// callers pass 'desktop-wastebasket-full' to swap just that one sprite.
+function macosDesktopIcons(wastebasketVariant) {
+  MACOS_DESKTOP_ICONS.forEach(function (sp) {
+    var name = (wastebasketVariant && sp[0] === 'desktop-wastebasket') ? wastebasketVariant : sp[0];
+    macosImg(desktop, name, sp[1], sp[2], 1);
+  });
 }
 
 // Control Strip, bottom-left docked bar. Measured byte-identical across all
@@ -775,22 +783,6 @@ function macosEditorContent(body) {
   el('div', 'sb-btn sb-down', vsb);
 }
 
-// The Control-click desktop context menu, verbatim (Help/New Folder/View>/
-// Clean Up/Arrange>/View Options…/Change Desktop Background…). No verbatim
-// production menu to mirror here (these are the site's own entries, per
-// shell.js's desktopMenuItems macos branch), so plain labels, no mnemonics.
-var MACOS_DESKTOP_MENU = [
-  { label: 'Help' },
-  { label: 'New Folder' },
-  { sep: true },
-  { label: 'View', sub: [{ label: 'as Icons', checked: true }] },
-  { label: 'Clean Up' },
-  { label: 'Arrange', sub: [{ label: 'by Name' }] },
-  { label: 'View Options…' },
-  { sep: true },
-  { label: 'Change Desktop Background…' }
-];
-
 FIXTURES.macos = {
   // Bare desktop: the Easy-Install default icon set + Control Strip + Apple
   // menu bar, clock pinned to the reference's own reading, arrow cursor at
@@ -865,32 +857,46 @@ FIXTURES.macos = {
     macosImg(desktop, 'ibeam', 435, 234, 99999);
   },
 
-  // Control-click contextual menu on bare desktop; cursor at the invocation
-  // point (the menu's own top-left corner, per the reference).
+  // Control-click contextual menu on bare desktop. Rendered as the whole
+  // extracted rectangle (icons/macos/menu-desktop-context.png, cut 1:1 from
+  // this very reference at (306,204)-(532,339)), not the live SHELL.showMenu
+  // CSS menu: the CSS version's font metrics render noticeably wider/taller
+  // than the reference (its own row height and system-font widths don't
+  // match the captured bitmap text), which showed up as a solid-red block
+  // covering the whole menu -- the extracted overlay is pixel-exact instead.
+  // The reference's own cursor arrow sits at the menu's top-left corner and
+  // is already baked into the crop, so no separate cursor() call is needed
+  // (confirmed: the crop's top-left pixels are the arrow, not blank canvas).
+  // Wastebasket is in its full-bin state here too (see macosDesktopIcons).
   '05-context-menu': function () {
     clearDesktop();
-    macosDesktopIcons();
+    macosDesktopIcons('desktop-wastebasket-full');
     macosControlStrip();
     macosMenuBar(macosFinderBar('menubar-clock-05'));
-    S.showMenu(MACOS_DESKTOP_MENU, 308, 206);
-    cursor(307, 205);
+    macosImg(desktop, 'menu-desktop-context', 306, 204, 30000);
   },
 
   // The real "Wastebasket contains 1 item... remove it permanently?" alert,
   // shipped as one extracted rectangle per the brief (its pinstriped title
   // strip renders pink/red under SheepShaver's genuine Toolbox drawing code
   // at Millions-of-colors depth -- kept as observed, not "corrected"; see
-  // verify/macos_rig/RIG.md). The menu bar's File/Edit/View/Special titles
-  // dim (measured: ink goes from pure black to (119,119,119) grey) while a
-  // modal alert holds focus; the Apple logo and the Finder app-indicator do
-  // NOT dim (measured byte-identical to every other Finder state).
+  // verify/macos_rig/RIG.md). Placed at (133,66): a PIL border-scan of this
+  // reference found the dialog's true outer black frame at x=133..507,
+  // y=66..191 -- the wave-2 crop/placement (131,85) started 19px below the
+  // frame's real top edge, inside the title stripe, so the whole stripe
+  // rendered as bare desktop; tools/make_icons.py's crop box is corrected to
+  // match. The menu bar's File/Edit/View/Special titles dim (measured: ink
+  // goes from pure black to (119,119,119) grey) while a modal alert holds
+  // focus; the Apple logo and the Finder app-indicator do NOT dim (measured
+  // byte-identical to every other Finder state). Wastebasket is full here
+  // (the alert is raised BY emptying it), same variant as 05.
   '06-dialog': function () {
     clearDesktop();
-    macosDesktopIcons();
+    macosDesktopIcons('desktop-wastebasket-full');
     macosControlStrip();
     macosMenuBar({ left: 'menubar-left-finder-dim', clockX: 488,
                    clock: 'menubar-clock-06', app: 'menubar-app-finder', appX: 547 });
-    macosImg(desktop, 'dialog-wastebasket', 131, 85, 9600);
+    macosImg(desktop, 'dialog-wastebasket', 133, 66, 9600);
     cursor(239, 27);
   }
 };
