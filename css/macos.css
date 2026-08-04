@@ -150,6 +150,10 @@ body {
   display: flex; align-items: center;
 }
 #macbar .menubar-item:hover { background: var(--menu-hl-bg); color: var(--menu-hl-fg); }
+/* the open menu's title stays lit until the menu closes (mb-open set by
+   shell.js's buildMenubar/closeMenus; real Mac OS keeps it highlighted) */
+#macbar .menubar-item.mb-open { background: var(--menu-hl-bg); color: var(--menu-hl-fg); }
+#macbar .mb-apple.mb-open { background: var(--menu-hl-bg); }
 .mb-clock { margin-left: auto; padding: 0 10px; font-size: var(--ui-size); color: #000; }
 .mb-app {
   height: 100%; display: flex; align-items: center; gap: 4px;
