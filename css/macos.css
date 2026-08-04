@@ -15,7 +15,7 @@
 
 :root {
   /* desktop */
-  --desk-bg: #999999;        /* placeholder desktop grey; a real pattern/backdrop lands later */
+  --desk-bg: #63639c;        /* wallpaper base RGB(99,99,156), measured off 01-desktop */
   --desk-label-fg: #000000;  /* classic Mac desktop labels: black text, not white */
   --sel-bg: #000080;         /* placeholder selection navy */
   --sel-fg: #ffffff;
@@ -50,8 +50,13 @@
   --ui-size: 12px;
 }
 
+/* Desktop wallpaper: the Mac OS 8.6 default pattern, extracted as its exact
+   140x140 tile (icons/macos/pattern.png, cut by tools/make_icons.py). Anchor
+   measured off the references: pattern(0,0) = screen(0,100), so a -40px
+   vertical offset (equivalent mod 140) aligns the CSS tiling to the capture
+   grid. Same background in fixtures and production. */
 body {
-  background: var(--desk-bg);
+  background: var(--desk-bg) url('../icons/macos/pattern.png') 0 -40px repeat;
   font-family: var(--ui-font);
   font-size: var(--ui-size);
   -webkit-font-smoothing: antialiased;
