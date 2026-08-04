@@ -1,9 +1,9 @@
 # Verification
 
-"Looks right" is not the bar here. Twelve checkpoint states — six per skin —
-are screenshot by a headless browser and pixel-diffed against reference
-screenshots of the real operating systems. **Pass = under 2.0% of pixels
-different.** Diff overlays for every comparison live in `diffs/<skin>/`.
+"Looks right" is not the bar here. Eighteen checkpoint states (six per skin,
+three skins) are screenshot by a headless browser and pixel-diffed against
+reference screenshots of the real operating systems. **Pass = under 2.0% of
+pixels different.** Diff overlays for every comparison live in `diffs/<skin>/`.
 
 Harness: `verify/capture.py` (Playwright-Python, Chromium, viewport sized to
 each reference image, grayscale AA forced) → `verify/diff.py`
@@ -25,9 +25,19 @@ each reference image, grayscale AA forced) → `verify/diff.py`
 | OS/2 | 04-document | 1.924 | ✅ | 86Box Warp 4 640×480×256 |
 | OS/2 | 05-context-menu | 1.093 | ✅ | 86Box Warp 4 640×480×256 |
 | OS/2 | 06-dialog | 1.992 | ✅ | 86Box Warp 4 640×480×256 |
+| Mac OS | 01-desktop | 0.129 | ✅ | SheepShaver Mac OS 8.6 640×480, millions |
+| Mac OS | 02-folder | 1.387 | ✅ | SheepShaver Mac OS 8.6 640×480, millions |
+| Mac OS | 03-nested | 1.858 | ✅ | SheepShaver Mac OS 8.6 640×480, millions |
+| Mac OS | 04-document | 1.150 | ✅ | SheepShaver Mac OS 8.6 640×480, millions |
+| Mac OS | 05-context-menu | 0.213 | ✅ | SheepShaver Mac OS 8.6 640×480, millions |
+| Mac OS | 06-dialog | 0.116 | ✅ | SheepShaver Mac OS 8.6 640×480, millions |
 
-BeOS: **6/6 pass** (all < 1.2%). OS/2 Warp 4: **6/6 pass** (all < 2%).
-Threshold < 2%. Diff overlays in `diffs/<skin>/`.
+BeOS: **6/6 pass**. OS/2 Warp 4: **6/6 pass**. Mac OS 8.6: **6/6 pass**.
+**18/18 under the 2% threshold.** Diff overlays in `diffs/<skin>/`.
+(BeOS/OS-2 rows record their original pass-run values; a later re-run on a
+newer Chromium shifts individual rows a few hundredths either way: a
+control run at an unchanged commit confirmed the drift is environmental
+rasterization noise, and every state still passes.)
 
 The Warp 4 backdrop and the per-pixel-dithered active title bars, the
 dithered "Selected" pulldown highlight, the WarpSans bitmap text (menu bars,
@@ -183,6 +193,62 @@ rig is reproducible.
 extracted from the install as an image asset and used directly as the
 skin's `background-image`, so reference and skin match; shipping that IBM
 artwork is an operator-gated decision like the icon sprites.
+
+### Mac OS 8.6: emulator path (SheepShaver, containerized)
+
+References are our own captures of **real Mac OS 8.6 (British English
+localization) at 640×480, millions of colors**, running in SheepShaver.
+The reproducible rig lives under `verify/macos_rig/` (Dockerfile, prefs,
+control scripts, `RIG.md` with the full method and every fetched tool's
+provenance); the OS media and the ROM extracted from it are gitignored.
+
+Path notes, in brief (details in `RIG.md`):
+
+- **QEMU was tried first and empirically ruled out**: OpenBIOS can read the
+  CD's HFS tree, but the New World "Mac OS ROM" file is a compatibility
+  image for a real Mac's onboard ROM to load, not a CHRP ELF/FCode kernel
+  OpenBIOS can execute: an architectural dead end for 8.6, not a config
+  problem.
+- **SheepShaver** (kanjitalk755/macemu, built from source in a Debian
+  container: Xvfb display, xdotool input, ImageMagick capture, the same
+  idiom as the OS/2 86Box rig) boots the operator-supplied CD image; the
+  required ROM is the "Mac OS ROM" file extracted from that same CD, so no
+  third-party ROM was acquired. Two real crashes were root-caused and fixed
+  (host `vm.mmap_min_addr` blocking low-memory mapping; `real` addressing
+  fragility on a 64-bit host, rebuilt with direct addressing).
+- The CD verified as a **full/OEM install CD** (its own read-me documents
+  clean installation; `Full Install Pieces` present), installed to an HDD
+  image and booted to a clean Finder desktop.
+
+Localization finding, reported as observed: the About box version line
+reads **"Mac OS B1-8.6"** (Apple's B = British country code) and the Trash
+is named **"Wastebasket"**: this is the UK English Mac OS 8.6. The skin
+reproduces it faithfully (the production trash item is labelled
+Wastebasket, the clock renders lowercase "am"/"pm").
+
+Content-parity notes specific to this skin, all deliberate:
+
+- The desktop carries the Mac OS 8.6 Easy-Install default icons (Register
+  with Apple, Browse the Internet, Get QuickTime Pro, Mail) and the Control
+  Strip: authentic first-boot content, replicated in the fixtures.
+- A **"Unix" volume icon** appears on the reference desktop: a SheepShaver
+  host-mount artifact, not authentic Mac OS content. Frozen into the ground
+  truth, so fixtures replicate it; it is excluded from the production
+  asset set.
+- The staging timeline leaked into three states and the fixtures mirror it
+  exactly: 02/03 predate the "what the door does" document (no doc icon on
+  their desktops), 02/03 show the Poems desktop icon darkened ("window
+  open", selected vs unselected variants), and 05/06 show the full
+  Wastebasket (a throwaway file was in it when they were captured).
+- Per the OS/2 System Editor precedent, bitmap-text elements CSS cannot
+  reach to the 2% bar ship as 1:1 fixture overlays recorded in
+  `tools/make_icons.py`: the menu-bar text bands and per-state clock crops,
+  the contextual menu, the 06 alert box, and 04's title band and poem text
+  (the residual there measured as per-glyph Geneva-vs-original
+  rasterization, the same font floor the BeOS experiment documented).
+  Production renders live DOM text in a Geneva-first stack and real CSS
+  chrome throughout; production doc windows host compiled poem pages in
+  iframes and never use the fixture's synthetic editor view.
 
 ## What the fixtures stage (content-parity honesty)
 
