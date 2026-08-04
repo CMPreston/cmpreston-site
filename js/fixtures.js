@@ -9,6 +9,8 @@
 //   os2 01,02,04,06 — GUIdebook os2warp3 archive captures
 //   os2 03 — OS2World wiki (IBM Personal Systems Magazine fig. 11)
 //   os2 05 — EDM2 wiki (16-color VGA capture; palette override class)
+//   macos/* — our own SheepShaver Mac OS 8.6 captures (operator's media, UK
+//             localization; see VERIFICATION.md and verify/macos_rig/RIG.md)
 (function () {
 'use strict';
 var q = new URLSearchParams(location.search);
