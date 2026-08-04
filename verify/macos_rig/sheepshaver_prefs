@@ -1,0 +1,15 @@
+rom /work/macos_rom.rom
+disk /work/macos_hd.img
+cdrom /work/macos86.iso
+screen win/640/480
+ramsize 134217728
+frameskip 0
+gfxaccel true
+nocdrom false
+nonet true
+nosound true
+nogui true
+jit false
+bootdriver 0
+bootdrive 0
+keyboardtype 5
