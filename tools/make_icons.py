@@ -418,6 +418,310 @@ def main(only=None):
         cut_inactive_tab_widgets()
     if not only or any('os2/' in f or f.startswith('os2') for f in only):
         cut_os2(only)
+    if not only or any('macos/' in f or f.startswith('macos') for f in only):
+        cut_macos(only)
+
+# ------------------------------------------------------------- Mac OS 8.6
+# Wave 2 (measurement + fixtures + assets): every crop below is cut from our
+# own SheepShaver captures of real Mac OS 8.6 (British localization) at
+# reference/macos/*.png, 640x480, Millions of colors (see verify/macos_rig/
+# RIG.md for the capture rig). Boxes were measured with PIL pixel sampling /
+# connected-component analysis, never eyeballed (per the project's house
+# method). Wave 3 owns chrome-fidelity CSS tuning against the diff% these
+# fixtures start at; this pass only has to get CONTENT right.
+#
+# Desktop background knockout note: the wallpaper is a soft-embossed pattern
+# (solid field RGB(99,99,156) plus a repeating "sad Mac" watermark), not a
+# hard 2-color dither like OS/2's field. Its watermark blends toward the SAME
+# hue family the Poems folder icon's own fill uses (e.g. (199,199,252)), so a
+# flat color-range knockout would eat holes in the folder icon itself. Instead
+# MACOS_TILE_BOX below records one verified-clean 140x140 period of the
+# pattern (self-tiling mean abs diff ~1.4/channel, i.e. exact); knockout
+# predicts the true background color at each pixel's OWN absolute screen
+# position by tiling that period, and only clears pixels matching the
+# prediction. Icons whose art never overlaps the purple family (doc, trash,
+# macintosh-hd, cursor) use a cheaper flat purple-range test instead.
+MACOS_TILE_BOX = (0, 100, 140, 240)   # region of 01-desktop.png = one clean tile
+# Anchor fact for wave 3: this box's top-left corner sits at screen (0,100),
+# i.e. tile(0,0) == screen(0, 100 mod 140). Equivalent minimal CSS offset:
+# background-position: 0 -40px (or 0 100px) with background-repeat: repeat.
+
+def _macos_tile_image():
+    return Image.open(REF / 'macos' / '01-desktop.png').convert('RGB').crop(MACOS_TILE_BOX)
+
+def _macos_bg_at(tile, x, y):
+    tw, th = tile.size
+    return tile.getpixel(((x - MACOS_TILE_BOX[0]) % tw, (y - MACOS_TILE_BOX[1]) % th))
+
+def knockout_macos_pattern(rgba, x0, y0, tol=30):
+    """Clear pixels matching the predicted desktop-pattern color at their true
+    screen position (x0+dx, y0+dy plus the crop's own origin); keeps icon art
+    that happens to share the wallpaper's hue family (the Poems folder icon)."""
+    tile = _macos_tile_image()
+    px = rgba.load()
+    for dy in range(rgba.height):
+        for dx in range(rgba.width):
+            bg = _macos_bg_at(tile, x0 + dx, y0 + dy)
+            p = px[dx, dy]
+            if all(abs(p[i] - bg[i]) <= tol for i in range(3)):
+                px[dx, dy] = (0, 0, 0, 0)
+
+def knockout_macos_purple(rgba, tol=25):
+    """Flat color-range knockout for icon art that never overlaps the
+    wallpaper's purple family (r~=g, b notably higher): doc, trash,
+    macintosh-hd, cursor."""
+    px = rgba.load()
+    for y in range(rgba.height):
+        for x in range(rgba.width):
+            r, g, b, a = px[x, y]
+            if abs(r - g) < 16 and b > r + tol:
+                px[x, y] = (0, 0, 0, 0)
+
+def knockout_macos_menubar(rgba, tol=10):
+    """Flat knockout of the (221,221,221) menu-bar grey, for apple.png/finder.png."""
+    px = rgba.load()
+    for y in range(rgba.height):
+        for x in range(rgba.width):
+            r, g, b, a = px[x, y]
+            if abs(r - 221) <= tol and abs(g - 221) <= tol and abs(b - 221) <= tol:
+                px[x, y] = (0, 0, 0, 0)
+
+def crop_macos_clean(src_rel, box, dst, method='purple'):
+    """A production desktop/menu-bar icon: crop, knock out its background by
+    the given method ('pattern' = tile-diff for the Poems folder icon,
+    'purple' = flat wallpaper range, 'menubar' = flat menu-bar grey), drop
+    speckle, tight-crop, and pad to a centred square so CSS 32x32 doesn't
+    distort it. Mirrors cut_os2()'s crop_clean()."""
+    im = Image.open(REF / src_rel).convert('RGB').crop(box).convert('RGBA')
+    if method == 'pattern':
+        knockout_macos_pattern(im, box[0], box[1])
+    elif method == 'menubar':
+        knockout_macos_menubar(im)
+    else:
+        knockout_macos_purple(im)
+    _declutter(im)
+    bbox = im.getbbox()
+    if bbox:
+        im = im.crop(bbox)
+    s = max(im.size)
+    sq = Image.new('RGBA', (s, s), (0, 0, 0, 0))
+    sq.alpha_composite(im, ((s - im.width) // 2, (s - im.height) // 2))
+    (OUT / dst).parent.mkdir(parents=True, exist_ok=True)
+    sq.save(OUT / dst)
+    print(f'{dst:28s} {sq.size[0]}x{sq.size[1]}  <- {src_rel} {box} (clean, {method})')
+
+def cut_macos(only=None):
+    def want(dst):
+        return not only or any(f in dst for f in only)
+
+    def crop(src_rel, box, dst):
+        im = Image.open(REF / src_rel).convert('RGB').crop(box)
+        out = OUT / dst
+        out.parent.mkdir(parents=True, exist_ok=True)
+        im.save(out)
+        print(f'{dst:28s} {im.size[0]}x{im.size[1]}  <- {src_rel} {box}')
+
+    # ---- desktop background pattern tile (140x140, see MACOS_TILE_BOX) ----
+    if want('macos/pattern'):
+        crop('macos/01-desktop.png', MACOS_TILE_BOX, 'macos/pattern.png')
+
+    # ---- desktop icon+label whole-rectangle units (opaque, 1:1 placement) --
+    # Per the extraction policy: these carry the patterned background, so
+    # fixture placement must be exact (same idiom as OS/2's OS2_RECTS). All
+    # nine are the real Mac OS 8.6 Easy-Install default desktop content;
+    # 'unix' is flagged separately below as a non-authentic rig artifact.
+    # Italic labels (measured by pixel slant, not assumed from "is it an
+    # alias"): register, browsenet, mail. quicktime measured NOT italic.
+    DESKTOP_RECTS = {
+        'desktop-register':     ('macos/01-desktop.png', (411, 25, 517, 76)),
+        'desktop-macintoshhd':  ('macos/01-desktop.png', (554, 44, 630, 82)),
+        'desktop-doorpoem':     ('macos/01-desktop.png', (415, 89, 513, 140)),
+        # 'Unix': a SheepShaver host-mount artifact frozen into the ground
+        # truth captures, NOT authentic Mac OS 8.6 content. Fixtures must
+        # replicate it for content parity (it's really there in the
+        # reference); it must never be added to the production icon set.
+        'desktop-unix':         ('macos/01-desktop.png', (573, 108, 611, 140)),
+        'desktop-poems':        ('macos/01-desktop.png', (571, 153, 612, 212)),
+        'desktop-browsenet':    ('macos/01-desktop.png', (538, 218, 640, 268)),
+        'desktop-quicktime':    ('macos/01-desktop.png', (542, 281, 640, 341)),
+        'desktop-mail':         ('macos/01-desktop.png', (573, 345, 611, 396)),
+        'desktop-wastebasket':  ('macos/01-desktop.png', (557, 409, 627, 460)),
+    }
+    for name, (src, box) in DESKTOP_RECTS.items():
+        if want(f'macos/{name}'):
+            crop(src, box, f'macos/{name}.png')
+
+    # ---- in-window Demos icon+label (opaque, sits on white, no knockout) ---
+    # 02-folder: normal state. 03-nested: darkened "opened" state, visible
+    # only as the slice not covered by the (dragged) Demos window in front.
+    if want('macos/demos-normal'):
+        crop('macos/02-folder.png', (32, 70, 67, 115), 'macos/demos-normal.png')
+    if want('macos/demos-opened'):
+        crop('macos/03-nested.png', (30, 70, 58, 118), 'macos/demos-opened.png')
+
+    # ---- cursors ----
+    if want('macos/cursor'):
+        im = Image.open(REF / 'macos/01-desktop.png').convert('RGB').crop((305, 253, 320, 273)).convert('RGBA')
+        knockout_macos_purple(im)
+        (OUT / 'macos/cursor.png').parent.mkdir(parents=True, exist_ok=True)
+        im.save(OUT / 'macos/cursor.png')
+        print(f'{"macos/cursor.png":28s} {im.size[0]}x{im.size[1]}  <- macos/01-desktop.png (305, 253, 320, 273) (purple knockout)')
+    if want('macos/ibeam'):
+        crop('macos/04-document.png', (433, 232, 443, 251), 'macos/ibeam.png')
+
+    # ---- screen-top menu bar bands (0,0)-(640,19); clock split out per-state
+    # like OS/2's wc-bar+wc-clock-NN so the live parts don't force six full
+    # copies of the static parts. 'left' = Apple logo + menu titles (two
+    # content variants: Finder's File/Edit/View/Special/Help, enabled and the
+    # dimmed-during-modal-alert state seen only in 06; SimpleText's own
+    # File/Edit/Font/Size/Style/Sound/Help in 04). 'app' = grip + app icon +
+    # app name + the screen's top-right corner cut (Finder variant measured
+    # byte-identical across 01/02/03/05/06, including 06 -- only the menu
+    # TITLES dim during the modal alert, not the application-menu segment).
+    if want('macos/menubar-left-finder'):
+        crop('macos/01-desktop.png', (0, 0, 245, 19), 'macos/menubar-left-finder.png')
+    if want('macos/menubar-left-finder-dim'):
+        crop('macos/06-dialog.png', (0, 0, 245, 19), 'macos/menubar-left-finder-dim.png')
+    if want('macos/menubar-left-simpletext'):
+        crop('macos/04-document.png', (0, 0, 317, 19), 'macos/menubar-left-simpletext.png')
+    CLOCK_SRC = {
+        '01-desktop': (488, 0, 547, 19), '02-folder': (488, 0, 547, 19),
+        '03-nested': (488, 0, 547, 19), '05-context-menu': (488, 0, 547, 19),
+        '06-dialog': (488, 0, 547, 19),
+    }
+    for state, box in CLOCK_SRC.items():
+        dst = f'macos/menubar-clock-{state[:2]}.png'
+        if want(f'macos/menubar-clock-{state[:2]}'):
+            crop(f'macos/{state}.png', box, dst)
+    if want('macos/menubar-clock-04'):
+        crop('macos/04-document.png', (458, 0, 518, 19), 'macos/menubar-clock-04.png')
+    if want('macos/menubar-app-finder'):
+        crop('macos/01-desktop.png', (547, 0, 640, 19), 'macos/menubar-app-finder.png')
+    if want('macos/menubar-app-simpletext'):
+        crop('macos/04-document.png', (518, 0, 640, 19), 'macos/menubar-app-simpletext.png')
+
+    # ---- context menu (05) and dialog (06), whole rectangles -- both carry
+    # bitmap text + bevels a CSS menu/dialog can't hit the 2% bar with yet ----
+    if want('macos/menu-desktop-context'):
+        crop('macos/05-context-menu.png', (306, 204, 532, 339), 'macos/menu-desktop-context.png')
+    # wave-3 correction: the wave-2 box (131,85,509,192) started 19px too low,
+    # cutting off the dialog's own striped title band entirely (PIL border-scan
+    # against reference/macos/06-dialog.png finds the true outer black frame at
+    # x=133..507, y=66..191 -- the old top bound of y=85 lands INSIDE the title
+    # stripe, well past the frame's real top edge at y=66). That 19-row loss
+    # was the single largest contributor to the 06 residual (the whole striped
+    # band rendered as bare desktop instead of the extracted rectangle).
+    if want('macos/dialog-wastebasket'):
+        crop('macos/06-dialog.png', (133, 66, 508, 192), 'macos/dialog-wastebasket.png')
+
+    # ---- wave-3 menu/dialog-state crops ----
+    # Wastebasket desktop icon, FULL-bin variant: at capture time for 05/06 the
+    # throwaway file was already in the bin, so those two references show the
+    # full can (crumpled paper visible), not the empty lid state 01-04 use.
+    # Same screen rectangle as the empty 'desktop-wastebasket' crop (557,409)-
+    # (627,460); 06-dialog.png is the source because it measures byte-closer
+    # to reference/raw/macos-emulator/wastebasket-full.png (the dedicated
+    # close-up capture) than the same rectangle in 05-context-menu.png does
+    # (SSD 6.6M vs 18.3M at the best-matching offset) -- 05's copy carries a
+    # bit more emulator-capture noise at this rectangle.
+    if want('macos/desktop-wastebasket-full'):
+        crop('macos/06-dialog.png', (557, 409, 627, 460), 'macos/desktop-wastebasket-full.png')
+
+    # Warning-triangle icon, extracted standalone for the PRODUCTION alert.
+    # Named alert-icon.png (not e.g. alert-warning.png) because shell.js's
+    # showAlert() hardcodes iconPath('alert-icon') for every skin -- see
+    # beos/alert-icon.png above for the sibling file this matches. The
+    # fixture keeps using the whole dialog-wastebasket rectangle above, so
+    # this file is production-only. Yellow-fill bounding box measured at
+    # x=[158,185] y=[103,129]; padded a few px to keep the black outline.
+    if want('macos/alert-icon'):
+        crop('macos/06-dialog.png', (155, 100, 188, 132), 'macos/alert-icon.png')
+
+    # ---- Control Strip (bottom-left docked bar). The strip content itself
+    # never changes, but wave-3 pixel-measurement found the 01-desktop crop is
+    # NOT byte-identical to 04's own capture: the SimpleText document window
+    # in 04-document.png is genuinely tall enough (see win-doc geometry below)
+    # that its bottom-left corner bevel overlaps the strip's top ~10-14 rows
+    # (measured: 370x14 differing region, not the "8x8 corner" an earlier pass
+    # assumed -- corrected here from direct pixel comparison, not carried
+    # forward). One extraction serves states 01/02/03/05/06 (no window reaches
+    # that low there); 04 gets its own per-state crop below so the composited
+    # window-over-strip pixels match 1:1 without having to model the overlap. ----
+    if want('macos/controlstrip'):
+        crop('macos/01-desktop.png', (0, 454, 370, 480), 'macos/controlstrip.png')
+    if want('macos/controlstrip-04'):
+        crop('macos/04-document.png', (0, 454, 370, 480), 'macos/controlstrip-04.png')
+
+    # ---- wave-3 chrome-state crops -----------------------------------------
+    # Title-bar widget glyphs (close/collapse/zoom): measured 12x12px each,
+    # starting at the pinstripe zone's own top (see wave-3 report). Per-pixel
+    # bevelled glyph art (not a flat bevel CSS can redraw), so extracted like
+    # OS/2's sysmenu/titlebtns. Active-state only: real Mac OS hides the whole
+    # box row on an inactive window (measured, see css/macos.css), so no
+    # inactive variant is needed. Source: 02-folder.png (Poems, active).
+    if want('macos/mtb-close'):
+        crop('macos/02-folder.png', (11, 29, 23, 41), 'macos/mtb-close.png')
+    if want('macos/mtb-collapse'):
+        crop('macos/02-folder.png', (390, 29, 402, 41), 'macos/mtb-collapse.png')
+    if want('macos/mtb-zoom'):
+        crop('macos/02-folder.png', (406, 29, 418, 41), 'macos/mtb-zoom.png')
+    # Desktop Poems icon, "opened" (darkened) variant: real Finder darkens a
+    # folder's desktop icon while its window is open. Correction (direct
+    # pixel check, not carried forward from the "measured byte-identical"
+    # assumption this comment used to make): 02 and 03 are NOT identical here
+    # -- 02 additionally shows the icon SELECTED (black label; Poems was just
+    # double-clicked open and stays the current selection), while 03 shows it
+    # open-but-unselected (light label; focus moved to Demos, opened
+    # afterward, which deselects the Poems desktop icon). Two crops, one per
+    # state. 'folder' (normal, unopened) stays the 01-sourced crop above.
+    if want('macos/desktop-poems-opened'):
+        crop('macos/02-folder.png', (571, 153, 612, 212), 'macos/desktop-poems-opened.png')
+    if want('macos/desktop-poems-opened-unsel'):
+        crop('macos/03-nested.png', (571, 153, 612, 212), 'macos/desktop-poems-opened-unsel.png')
+    # Grow box (resize corner): measured art is a small DIAMOND checkerboard
+    # glyph centered in the 16x16 tile, not a uniform diagonal hatch (a CSS
+    # repeating-gradient approximation was tried first and measured further
+    # from the reference than this direct extraction).
+    if want('macos/growbox'):
+        crop('macos/02-folder.png', (407, 248, 423, 264), 'macos/growbox.png')
+
+    # ---- wave-4 integration crops ------------------------------------------
+    # 04-document's last 0.145pp over the bar was per-glyph text rasterization
+    # (Chromium Geneva vs the original Mac OS bitmap text), the same measured
+    # floor the BeOS font experiment documented. Per the OS/2 System Editor
+    # precedent (poem-text.png), the fixture overlays the reference's own
+    # bitmap text 1:1; production is unaffected (production doc windows host
+    # compiled poem pages in iframes, never this synthetic editor view).
+    # title-editor-band: the SimpleText window's full title band, borders and
+    # widget boxes included (window sits at x-1,y19 in the fixture; band cut
+    # from screen x0 so the off-screen 1px column stays off-screen).
+    if want('macos/title-editor-band'):
+        crop('macos/04-document.png', (0, 19, 583, 42), 'macos/title-editor-band.png')
+    # poemtext-04: the four poem lines + caret, tight bbox measured by black-
+    # pixel scan of the client area ((3,44)-(243,129) + 1px margin).
+    if want('macos/poemtext-04'):
+        crop('macos/04-document.png', (3, 43, 250, 131), 'macos/poemtext-04.png')
+
+    # ---- production icons: clean, transparent, cut from the SAME genuine
+    # Mac OS 8.6 art (Poems is a real folder, "what the door does" a real
+    # document, Wastebasket the real trash, Macintosh HD the real boot disk)
+    # -- never from the 'Unix' rig artifact. ----
+    # Bottom edges are held exact to the measured label-top (no pad): the pale
+    # (207,207,225) label-backing box sits just 1-2px below and its color is
+    # too close to the wallpaper purple for the flat knockout to clear (that
+    # showed up as a thin retained sliver until this was tightened).
+    if want('macos/folder.png'):
+        crop_macos_clean('macos/01-desktop.png', (571, 153, 609, 188), 'macos/folder.png', 'pattern')
+    if want('macos/doc.png'):
+        crop_macos_clean('macos/01-desktop.png', (415, 89, 510, 124), 'macos/doc.png', 'purple')
+    if want('macos/trash.png'):
+        crop_macos_clean('macos/01-desktop.png', (557, 409, 624, 444), 'macos/trash.png', 'purple')
+    if want('macos/macintosh-hd.png'):
+        crop_macos_clean('macos/01-desktop.png', (554, 44, 627, 60), 'macos/macintosh-hd.png', 'purple')
+    if want('macos/apple.png'):
+        crop_macos_clean('macos/01-desktop.png', (15, 0, 30, 18), 'macos/apple.png', 'menubar')
+    if want('macos/finder.png'):
+        crop_macos_clean('macos/01-desktop.png', (559, 0, 579, 20), 'macos/finder.png', 'menubar')
 
 if __name__ == '__main__':
     import sys

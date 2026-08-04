@@ -1,5 +1,5 @@
 {
-  "_comment": "12 checkpoint states: 6 per skin. reference paths are relative to reference/<skin>/. A state with missing:true has no acquired reference yet and is reported as such (never silently skipped).",
+  "_comment": "18 checkpoint states: 6 per skin. reference paths are relative to reference/<skin>/. A state with missing:true has no acquired reference yet and is reported as such (never silently skipped).",
   "states": [
     "01-desktop",
     "02-folder",
@@ -8,7 +8,7 @@
     "05-context-menu",
     "06-dialog"
   ],
-  "skins": ["beos", "os2"],
+  "skins": ["beos", "os2", "macos"],
   "pass_threshold_pct": 2.0,
   "pixel_threshold": 0.1
 }

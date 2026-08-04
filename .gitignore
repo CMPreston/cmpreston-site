@@ -19,3 +19,23 @@ verify/os2_rig/*.raw
 verify/os2_rig/*.log
 verify/os2_rig/nvr/
 verify/os2_rig/__pycache__/
+
+# Mac OS 8.6 rig binaries (operator media, extracted ROM, disk images - never commit)
+verify/macos_rig/*.iso
+verify/macos_rig/*.img
+verify/macos_rig/*.rom
+verify/macos_rig/*.dsk
+verify/macos_rig/*.hda
+verify/macos_rig/*.raw
+verify/macos_rig/*.log
+verify/macos_rig/*.ppm
+verify/macos_rig/*.png
+verify/macos_rig/__pycache__/
+# vendored third-party source (SheepShaver/macemu) - fetched fresh by the
+# Dockerfile at build time, never committed; also a QEMU-attempt scratch dir
+verify/macos_rig/src/
+verify/macos_rig/qemu_work/
+# SheepShaver runtime state and crash artifacts - never commit
+verify/macos_rig/.sheepshaver_nvram
+verify/macos_rig/core
+verify/macos_rig/core.*

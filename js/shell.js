@@ -1,6 +1,10 @@
 // cmpreston.com desktop shell — vanilla JS, no dependencies, no build step.
-// Two skins: 'beos' (BeOS R4/R5 era) and 'os2' (OS/2 Warp 4, 1996).
-// Structure lives here; every color/metric lives in css/<skin>.css.
+// Three skins: 'beos' (BeOS R4/R5 era), 'os2' (OS/2 Warp 4, 1996), 'macos'
+// (Mac OS 8.6, Platinum appearance; stub pending its own pixel-fidelity pass).
+// Structure lives here; every color/metric lives in css/<skin>.css. Per-skin
+// facts (names, layout, resize dirs, clock format, top bar) collect in the
+// SKINS registry below; behavior that differs by more than a constant stays
+// as its own branch in the function it belongs to.
 (function () {
 'use strict';
 
@@ -39,10 +43,64 @@ function isMobile() {
          matchMedia('(max-width: 1024px)').matches;
 }
 
+// ---------------------------------------------------------------- skin registry
+// One entry per skin: the atomic facts that used to live inline as
+// SKIN === 'beos' ? A : B ternaries. Behavior that differs by more than a
+// constant (menu contents, window chrome) stays as its own per-skin branch
+// in the function it belongs to, same as before. buildDeskbar/buildWarpCenter/
+// buildMenuBar are function declarations (hoisted), so referencing them here
+// ahead of their definitions further down the file is safe.
+var SKINS = {
+  beos: {
+    displayName: 'BeOS',
+    trashName: 'Trash',
+    folderTitleSuffix: '',
+    topBar: buildDeskbar,
+    clockFormat: 'ampm',
+    clockTickMs: 5000,
+    resizeDirs: ['e', 'w', 's', 'se', 'sw']
+  },
+  os2: {
+    displayName: 'OS/2 Warp',
+    trashName: 'Shredder',
+    folderTitleSuffix: ' - Icon View',
+    topBar: buildWarpCenter,
+    clockFormat: 'ampmss',
+    clockTickMs: 1000,
+    resizeDirs: ['e', 'w', 's', 'n', 'se', 'sw'],
+    maximizeTop: 23   // below the 22px WarpCenter bar + 1px border
+  },
+  macos: {
+    displayName: 'Mac OS',
+    trashName: 'Wastebasket',   // UK CD localization, verified in wave-3 reference pixels
+    folderTitleSuffix: '',
+    topBar: buildMenuBar,
+    clockFormat: 'ampm',
+    clockLower: true,   // the UK 8.6 reference renders "3:29 am", lowercase
+    clockTickMs: 5000,
+    resizeDirs: ['e', 'w', 's', 'se', 'sw'],
+    maximizeTop: 20   // below the 20px macbar
+  }
+};
+
+// Menu entries offering to switch to each of the OTHER two skins. Content
+// (which skin) comes from SKINS[x].displayName; wording style follows the
+// CURRENT skin's own convention, same as the single hand-written entries
+// this replaces (BeOS/macOS: ellipsis, no mnemonic; OS/2: dots + mnemonic).
+function switchItems() {
+  return Object.keys(SKINS).filter(function (id) { return id !== SKIN; })
+    .map(function (id) {
+      var name = SKINS[id].displayName;
+      var label = (SKIN === 'os2') ? 'Switch to &' + name + '...'
+                                    : 'Switch to ' + name + '…';
+      return { label: label, action: function () { switchSkin(id); } };
+    });
+}
+
 // ---------------------------------------------------------------- skin text
 
 function switcherName() { return SKIN === 'beos' ? 'OS/2 Warp' : 'BeOS'; }
-function trashName()    { return SKIN === 'beos' ? 'Trash' : 'Shredder'; }
+function trashName()    { return SKINS[SKIN].trashName; }
 function itemName(item) {
   if (item.type === 'switcher') return switcherName();
   if (item.type === 'trash') return trashName();
@@ -53,7 +111,7 @@ function itemIcon(item) {
   return item.icon || (item.type === 'folder' ? 'folder' : item.type);
 }
 function folderTitle(item) {
-  return SKIN === 'os2' ? itemName(item) + ' - Icon View' : itemName(item);
+  return itemName(item) + SKINS[SKIN].folderTitleSuffix;
 }
 
 // ---------------------------------------------------------------- menus
@@ -61,6 +119,13 @@ function folderTitle(item) {
 function closeMenus(fromLevel) {
   fromLevel = fromLevel || 0;
   while (openMenus.length > fromLevel) openMenus.pop().remove();
+  // menu-bar titles stay lit while their menu is open (real Mac OS behavior;
+  // the class is styled by macos.css only, inert on the other skins)
+  if (fromLevel === 0) {
+    document.querySelectorAll('.mb-open').forEach(function (n) {
+      n.classList.remove('mb-open');
+    });
+  }
 }
 
 // items: [{label, action, sub, disabled, checked, def, sep, header, icon,
@@ -160,8 +225,13 @@ function setPanels(win, show) {
     e.style.display = show ? '' : 'none';
   });
 }
-function os2Maximize(win) {
+// Maximize/restore: fills the desktop below the screen-top bar (os2:
+// WarpCenter, macos: macbar), or restores the pre-maximize geometry. Each
+// skin's bar height lives in SKINS[SKIN].maximizeTop. Shared by both skins
+// that wire a zoom/maximize control (os2's tb-ovl-max, macos's mtb-zoom).
+function winMaximize(win) {
   var node = win.node, body = winBody(win);
+  var top = SKINS[SKIN].maximizeTop || 0;
   focusWindow(win);
   if (win._max) {
     node.style.left = win._max.l; node.style.top = win._max.t;
@@ -171,15 +241,17 @@ function os2Maximize(win) {
   } else {
     win._max = { l: node.style.left, t: node.style.top, w: node.style.width,
                  bh: body ? body.style.height : '' };
-    node.style.left = '0px'; node.style.top = '23px';
+    node.style.left = '0px'; node.style.top = top + 'px';
     node.style.width = (innerWidth - 4) + 'px';
     if (body) {
       var chrome = node.offsetHeight - body.offsetHeight;
-      body.style.height = Math.max(90, innerHeight - 23 - chrome - 4) + 'px';
+      body.style.height = Math.max(90, innerHeight - top - chrome - 4) + 'px';
     }
   }
 }
-function os2Shade(win) {
+// Windowshade: rolls the window up to just its title bar. Shared by os2's
+// Hide button and macos's collapse box.
+function winShade(win) {
   win._shaded = !win._shaded;
   setPanels(win, !win._shaded);
   focusWindow(win);
@@ -219,7 +291,7 @@ function os2LayoutMin() {
 function makeDraggable(win, handle) {
   handle.addEventListener('pointerdown', function (e) {
     if (e.button !== 0) return;
-    if (e.target.closest('.tab-close,.tab-zoom,.tb-btn,.sysmenu')) return;
+    if (e.target.closest('.tab-close,.tab-zoom,.tb-btn,.sysmenu,.mtb-close,.mtb-collapse,.mtb-zoom')) return;
     var sx = e.clientX, sy = e.clientY;
     var ox = win.node.offsetLeft, oy = win.node.offsetTop;
     function move(ev) {
@@ -254,9 +326,8 @@ function makeResizable(win) {
   // edge-dragging on both). BeOS keeps its signature bottom-right thumb look;
   // OS/2 additionally gets a top-edge strip. (Historically BeOS R5 resized from
   // the bottom-right corner only, but edge-drag is the requested behavior.)
-  var dirs = SKIN === 'beos'
-    ? ['e', 'w', 's', 'se', 'sw']
-    : ['e', 'w', 's', 'n', 'se', 'sw'];
+  // macOS gets the same set as BeOS (SKINS[SKIN].resizeDirs).
+  var dirs = SKINS[SKIN].resizeDirs;
   dirs.forEach(function (dir) {
     var h = el('div', 'rz rz-' + dir, node);
     h.addEventListener('pointerdown', function (e) {
@@ -326,7 +397,7 @@ function createWindow(opts) {
     el('div', 'tab-zoom', tab);
     inner = el('div', 'frame', node);
     handle = tab;
-  } else {
+  } else if (SKIN === 'os2') {
     // OS/2 Warp 4: full-width dithered-blue title bar: sysmenu folder/doc icon |
     // title text | hide+maximize button cluster (a sprite). The fixtures pass
     // opts.titleImg to overlay the exact extracted title-bar rectangle (the
@@ -342,7 +413,7 @@ function createWindow(opts) {
     btnImg.src = iconPath('titlebtns');
     btnImg.draggable = false;
     // transparent overlays making the Hide/Minimize/Maximize buttons work
-    [['hide', os2Shade], ['min', os2Minimize], ['max', os2Maximize]].forEach(function (pair) {
+    [['hide', winShade], ['min', os2Minimize], ['max', winMaximize]].forEach(function (pair) {
       var ob = el('button', 'tb-ovl tb-ovl-' + pair[0], btns);
       ob.addEventListener('click', function (e) { e.stopPropagation(); pair[1](win); });
     });
@@ -360,18 +431,65 @@ function createWindow(opts) {
     sys.addEventListener('dblclick', function () { closeMenus(0); closeWindow(win); });
     inner = node;
     handle = tb;
+  } else {
+    // Mac OS 8.6 Platinum title bar: close box | title (centered) | collapse
+    // + zoom boxes. No sysmenu, no in-window menu at all: Mac menus live in
+    // the screen-top macbar (see buildMenuBar). Modeled on the BeOS .tab flex
+    // layout: a flex-grow title between fixed-size boxes gives left/center/
+    // right for free, no explicit position math needed.
+    var mtb = el('div', 'titlebar-mac', node);
+    el('div', 'mtb-close', mtb).addEventListener('click', function () { closeWindow(win); });
+    // .mtb-title is a flex container that CENTERS a fitted inner pill
+    // (.mtb-title-fit): the reference shows the title's icon+text sitting on
+    // a solid face-colored patch sized to their own content, not a band
+    // spanning the full flex:1 remaining width (that would paint over the
+    // pinstripe well past the text on both sides).
+    var mtitle = el('div', 'mtb-title', mtb);
+    var fit = el('div', 'mtb-title-fit', mtitle);
+    // Finder/SimpleText "proxy icon": the window's own item icon, small,
+    // immediately left of the title text (measured in the wave-3 reference:
+    // present on every folder/doc title, ~14px, no visible bevel/frame of
+    // its own -- just the plain icon art). about/alert windows have no
+    // backing item, so they get no proxy icon (matches beos/os2, which also
+    // only icon their own sysmenu for real windows).
+    var proxyIcon = { folder: 'folder', doc: 'doc' }[opts.kind];
+    if (proxyIcon) {
+      var pi = el('img', 'mtb-icon', fit);
+      pi.src = iconPath(proxyIcon);
+      pi.alt = ''; pi.draggable = false;
+    }
+    fit.appendChild(document.createTextNode(opts.title));
+    el('div', 'mtb-collapse', mtb).addEventListener('click', function (e) {
+      e.stopPropagation(); winShade(win);
+    });
+    el('div', 'mtb-zoom', mtb).addEventListener('click', function (e) {
+      e.stopPropagation(); winMaximize(win);
+    });
+    inner = node;
+    handle = mtb;
   }
 
   if (opts.menubar) buildMenubar(inner, opts.menubar, win);
   var body = el('div', 'win-body', inner);
   if (h != null) body.style.height = h + 'px';
   opts.content(body, win);
-  if (SKIN === 'beos') el('div', 'resize-corner', inner);
+  // beos: every window kind. macos: folder AND doc windows both get the
+  // Platinum grow box (confirmed in wave-3 reference pixels: folder windows
+  // DO show the bottom-right resize corner, not just doc windows).
+  if (SKIN === 'beos' || (SKIN === 'macos' && (opts.kind === 'doc' || opts.kind === 'folder'))) el('div', 'resize-corner', inner);
 
   node.addEventListener('pointerdown', function () { focusWindow(win); }, true);
   makeDraggable(win, handle);
   if (opts.kind === 'folder' || opts.kind === 'doc') makeResizable(win);
   windows.push(win);
+  // Every window gets a baseline stacking position, active or not: desktop
+  // icons render with an explicit z-index (see makeIcon/macosImg) so they
+  // stack by that number rather than DOM order, which otherwise put them
+  // above an unfocused window (auto z-index loses to any explicit one)
+  // wherever the two overlap -- visible as icon art bleeding through a
+  // background window's frame. zTop only advances on focusWindow, so an
+  // inactive window still stacks below whatever's focused after it.
+  node.style.zIndex = ++zTop;
   if (opts.active !== false) focusWindow(win);
   return win;
 }
@@ -410,6 +528,7 @@ function buildMenubar(parent, menus, win) {
       e.stopPropagation();
       var r = item.getBoundingClientRect();
       showMenu(mdef.items(win), r.left, r.bottom);
+      item.classList.add('mb-open');
     });
   });
   return bar;
@@ -482,14 +601,20 @@ document.addEventListener('mousedown', function (e) {
 });
 
 function iconMenuItems(item) {
-  var open = { label: '&Open', def: true, action: function () { openItem(item); } };
+  var openAction = function () { openItem(item); };
   if (SKIN === 'os2') {
-    return [open, { sep: true },
+    return [{ label: '&Open', def: true, action: openAction }, { sep: true },
       { label: '&Settings...', disabled: true },
       { label: '&Copy...', disabled: true },
       { label: 'Create s&hadow...', disabled: true }];
   }
-  return [open, { sep: true },
+  if (SKIN === 'macos') {
+    return [{ label: 'Open', def: true, action: openAction }, { sep: true },
+      { label: 'Get Info', disabled: true },
+      { label: 'Label', disabled: true },
+      { label: 'Move To Trash', disabled: true }];
+  }
+  return [{ label: '&Open', def: true, action: openAction }, { sep: true },
     { label: 'Get &info', disabled: true },
     { label: '&Duplicate', disabled: true },
     { label: 'Move to &Trash', disabled: true }];
@@ -498,7 +623,7 @@ function iconMenuItems(item) {
 // ---------------------------------------------------------------- desktop
 
 function renderDesktop() {
-  var slots = deskSlots(M.desktop.length);
+  var slots = deskSlots(M.desktop);
   M.desktop.forEach(function (item, i) {
     var d = makeIcon(item, desktop, 'desk-icon');
     d.style.left = slots[i].x + 'px';
@@ -511,18 +636,26 @@ function renderDesktop() {
     showMenu(desktopMenuItems(), e.clientX, e.clientY);
   });
 
-  if (SKIN === 'beos') buildDeskbar(); else buildWarpCenter();
+  SKINS[SKIN].topBar();
 }
 
 // Default icon placement. BeOS lays the demo desktop as a row block top-left
 // (matches R5 defaults); OS/2 as a column down the left edge (matches Warp 3).
-function deskSlots(n) {
+// macOS: a column down the RIGHT edge below the 20px macbar, with Trash
+// pinned to the bottom-right corner (both real Finder desktop defaults).
+// Takes the full item list, not just a count, so it can single out the
+// trash item; the beos/os2 branches still only use its length, unchanged.
+function deskSlots(items) {
+  var n = items.length;
   var out = [];
+  var col = 0;
   for (var i = 0; i < n; i++) {
     // BeOS: row block top-left. OS/2: column down the left edge, started below
     // the 22px WarpCenter bar so the top icon isn't clipped by it.
     if (SKIN === 'beos') out.push({ x: 25 + (i % 3) * 100, y: 8 + Math.floor(i / 3) * 74 });
-    else out.push({ x: 30, y: 34 + i * 66 });
+    else if (SKIN === 'os2') out.push({ x: 30, y: 34 + i * 66 });
+    else if (items[i].type === 'trash') out.push({ x: innerWidth - 84, y: innerHeight - 90 });
+    else { out.push({ x: innerWidth - 84, y: 28 + col * 74 }); col++; }
   }
   return out;
 }
@@ -538,14 +671,27 @@ function desktopMenuItems() {
       { label: '&Settings...', disabled: true },
       { label: 'System s&etup', disabled: true },
       { sep: true },
-      { label: '&About this site...', action: showAbout },
-      { label: 'Switch to &BeOS...', action: switchSkin },
+      { label: '&About this site...', action: showAbout }
+    ].concat(switchItems(), [
       { sep: true },
       { label: '&Refresh', disabled: true },
       { label: 'Loc&kup now', disabled: true },
       { label: 'Sh&ut down...', action: shutdown },
       { label: '&Window list', disabled: true }
-    ];
+    ]);
+  }
+  if (SKIN === 'macos') {
+    // No verbatim real menu to mirror here (unlike the R5 Tracker menu
+    // below): every entry is our own, so no mnemonics, ellipsis style.
+    return [
+      { label: 'Help', disabled: true },
+      { label: 'About this site' + '…', action: showAbout },
+      { sep: true }
+    ].concat(switchItems(), [
+      { sep: true },
+      { label: 'New Folder', disabled: true },
+      { label: 'Change Desktop Background' + '…', disabled: true }
+    ]);
   }
   // The R5 Tracker desktop menu, verbatim; our own entries live in Add-Ons.
   return [
@@ -563,8 +709,8 @@ function desktopMenuItems() {
     { label: 'M&ount', sub: [{ label: 'boot', disabled: true }] },
     { sep: true },
     { label: 'Add-On&s', sub: [
-      { label: 'About this site' + '…', action: showAbout },
-      { label: 'Switch to OS/2 Warp' + '…', action: switchSkin }] }
+      { label: 'About this site' + '…', action: showAbout }
+    ].concat(switchItems()) }
   ];
 }
 
@@ -591,8 +737,31 @@ function openFolder(item) {
         beosFolderFurniture(body, win,
           n === 1 ? '1 item' : n + ' items');
       }
+      if (SKIN === 'macos') {
+        macosFolderFurniture(body, n);
+      }
     }
   });
+}
+
+// Mac Finder-style furniture: the "N items, X GB available" header row (real
+// production chrome, fed by the manifest's own children count) plus the
+// vertical + horizontal scrollbars (existing .sb classes, skinned by
+// macos.css; .win-folder .sb-v's top:21px offset clears the header, see
+// macos.css). The free-space figure is a fixed, period-plausible placeholder
+// -- this is a static demo site with no real volume to query -- matching the
+// figure the wave-3 pixel fixtures themselves pin for 02/03.
+function macosFolderFurniture(body, n) {
+  var row = el('div', 'mac-header-row', body);
+  row.textContent = (n === 1 ? '1 item' : n + ' items') + ', 1.7 GB available';
+  var vsb = el('div', 'sb sb-v', body);
+  el('div', 'sb-btn sb-up', vsb);
+  el('div', 'sb-track', vsb);
+  el('div', 'sb-btn sb-down', vsb);
+  var hsb = el('div', 'sb sb-h', body);
+  el('div', 'sb-btn sb-left', hsb);
+  el('div', 'sb-track sb-track-h', hsb);
+  el('div', 'sb-btn sb-right', hsb);
 }
 
 function beosFolderMenubar() {
@@ -659,6 +828,8 @@ function docMenubar() {
         return [{ label: '&About this site...', action: showAbout }]; } }
     ];
   }
+  // macos: no in-window menu bar at all (Mac menus live in the top macbar).
+  if (SKIN === 'macos') return null;
   return [
     { label: 'File', items: function (win) {
       return [
@@ -686,7 +857,7 @@ function buildDocScrollbars(body, fr, win) {
   var track = el('div', 'sb-track', vsb);
   var thumb = el('div', 'sb-thumb', track);
   var dn = el('div', 'sb-btn sb-down', vsb);
-  if (SKIN === 'os2') el('div', 'sb sb-h', body);
+  if (SKIN === 'os2' || SKIN === 'macos') el('div', 'sb sb-h', body);
 
   function doc() {
     try { return fr.contentDocument || null; } catch (e) { return null; }
@@ -748,6 +919,14 @@ function buildDocScrollbars(body, fr, win) {
 
 // ---------------------------------------------------------------- dialogs
 
+// Dialog button class: beos-button / os2-button / mac-button. Each skin's
+// own CSS defines the look; this just picks the class.
+function buttonClass() {
+  if (SKIN === 'os2') return 'os2-button';
+  if (SKIN === 'macos') return 'mac-button';
+  return 'beos-button';
+}
+
 var aboutWin = null;
 function showAbout() {
   if (aboutWin && windows.indexOf(aboutWin) !== -1) { focusWindow(aboutWin); return aboutWin; }
@@ -762,8 +941,7 @@ function showAbout() {
       body.classList.add('about-simple');
       el('p', 'about-copy', body).textContent = COPY;
       var btnrow = el('div', 'about-btnrow', body);
-      var ok = el('button',
-        (SKIN === 'os2' ? 'os2-button' : 'beos-button') + ' default-button', btnrow);
+      var ok = el('button', buttonClass() + ' default-button', btnrow);
       ok.textContent = 'OK';
       ok.addEventListener('click', function () { closeWindow(win); });
     }
@@ -802,12 +980,12 @@ function buildDeskbar() {
     var r = logo.getBoundingClientRect();
     showMenu([
       { label: 'About this site' + '…', action: showAbout },
-      { sep: true },
-      { label: 'Switch to OS/2 Warp' + '…', action: switchSkin },
+      { sep: true }
+    ].concat(switchItems(), [
       { sep: true },
       { label: 'Restart', disabled: true },
       { label: 'Shut down', action: shutdown }
-    ], r.left - 60, r.bottom);
+    ]), r.left - 60, r.bottom);
     e.stopPropagation();
   });
 }
@@ -819,15 +997,16 @@ function tickClock() {
   var h = d.getHours() % 12 || 12;
   var mm = String(d.getMinutes()).padStart(2, '0');
   var ap = d.getHours() < 12 ? 'AM' : 'PM';
-  if (SKIN === 'os2') {
+  var cfg = SKINS[SKIN];
+  if (cfg.clockLower) ap = ap.toLowerCase();
+  if (cfg.clockFormat === 'ampmss') {
     // WarpCenter shows H:MM:SS AM (seconds visible in the reference)
     var ss = String(d.getSeconds()).padStart(2, '0');
     clockEl.textContent = h + ':' + mm + ':' + ss + ' ' + ap;
-    setTimeout(tickClock, 1000);
   } else {
     clockEl.textContent = h + ':' + mm + ' ' + ap;
-    setTimeout(tickClock, 5000);
   }
+  setTimeout(tickClock, cfg.clockTickMs);
 }
 
 // OS/2 Warp 4 WarpCenter: the ~22px bar pinned to the top edge. Left/middle is
@@ -851,15 +1030,134 @@ function buildWarpCenter() {
     var r = menuBtn.getBoundingClientRect();
     showMenu([
       { label: '&About this site' + '…', action: showAbout },
-      { sep: true },
-      { label: 'Switch to &BeOS' + '…', action: switchSkin },
+      { sep: true }
+    ].concat(switchItems(), [
       { sep: true },
       { label: 'Sh&ut down', action: shutdown }
-    ], r.left, r.bottom);
+    ]), r.left, r.bottom);
   }
   menuBtn.addEventListener('click', function (e) { e.stopPropagation(); openWcMenu(); });
   wc.addEventListener('contextmenu', function (e) { e.preventDefault(); });
   return wc;
+}
+
+// macos Mac OS 8.6 menu bar: a full-width 20px bar pinned to the screen top
+// (real Mac menus live here, not in each window; createWindow's macos branch
+// builds no in-window menu bar at all). Left to right: Apple menu, then
+// File/Edit/View/Special/Help pulldown titles built with the same
+// buildMenubar() helper the in-window menus use (its click-to-open-via-
+// showMenu idiom is already skin-agnostic); right-aligned clock, then an
+// application indicator (icon + "Finder"), the macos analog of BeOS's
+// Tracker tray entry / OS/2's WarpCenter slot.
+function buildMenuBar() {
+  var mb = el('div', null, desktop);
+  mb.id = 'macbar';
+  var apple = el('button', 'mb-apple', mb);
+  var appleImg = el('img', null, apple);
+  appleImg.alt = '';
+  appleImg.src = iconPath('apple');
+  appleImg.addEventListener('error', function () {
+    appleImg.remove();
+    apple.textContent = 'Apple';
+  });
+  apple.addEventListener('mousedown', function (e) {
+    e.stopPropagation();
+    var r = apple.getBoundingClientRect();
+    showMenu(macosAppleMenuItems(), r.left, r.bottom);
+    apple.classList.add('mb-open');   // stays lit until closeMenus clears it
+  });
+  buildMenubar(mb, [
+    { label: 'File', items: macosFileMenuItems },
+    { label: 'Edit', items: macosEditMenuItems },
+    { label: 'View', items: macosViewMenuItems },
+    { label: 'Special', items: macosSpecialMenuItems },
+    { label: 'Help', items: macosHelpMenuItems }
+  ], null);
+  clockEl = el('span', 'mb-clock', mb);
+  tickClock();
+  var app = el('div', 'mb-app', mb);
+  var appImg = el('img', null, app);
+  appImg.alt = '';
+  appImg.src = iconPath('finder');
+  appImg.addEventListener('error', function () { appImg.remove(); });
+  el('span', null, app).textContent = 'Finder';
+  mb.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+  macosControlStrip();
+  return mb;
+}
+
+// Control Strip: a decorative, non-interactive desktop element (the
+// extracted bottom-left toolbar strip), the macos analog of os2's WarpCenter
+// bar image. Docked to the viewport's bottom-left corner (not a fixed
+// 454px-from-top offset like the 640x480 pixel-diff fixtures use) so it
+// stays put across window/viewport sizes; no z-index of its own, so windows
+// (which get an explicit z-index >= 11 on focus) stack above it by default,
+// same as the reference shows a focused document window's own frame
+// overlapping the strip's top edge (see fixtures.js macosControlStrip).
+function macosControlStrip() {
+  var cs = el('img', null, desktop);
+  cs.id = 'controlstrip';
+  cs.alt = '';
+  cs.draggable = false;
+  cs.src = iconPath('controlstrip');
+  cs.style.cssText = 'position:absolute;left:0;bottom:0;image-rendering:pixelated;pointer-events:none';
+  return cs;
+}
+
+function macosAppleMenuItems() {
+  return [
+    { label: 'About this site' + '…', action: showAbout },
+    { sep: true }
+  ].concat(switchItems(), [
+    { sep: true },
+    { label: 'Shut Down', action: shutdown }
+  ]);
+}
+
+// File/Edit disabled placeholders mirror the other skins' mostly-disabled
+// authentic-entry pattern (e.g. os2's docMenubar Edit menu, its own desktop
+// menu's &Refresh/Loc&kup now/&Window list).
+function macosFileMenuItems() {
+  return [
+    { label: 'New Folder', disabled: true },
+    { label: 'Open', disabled: true },
+    { sep: true },
+    { label: 'Close Window', disabled: true }
+  ];
+}
+
+function macosEditMenuItems() {
+  return [
+    { label: 'Undo', disabled: true },
+    { sep: true },
+    { label: 'Cut', disabled: true },
+    { label: 'Copy', disabled: true },
+    { label: 'Paste', disabled: true },
+    { label: 'Clear', disabled: true },
+    { sep: true },
+    { label: 'Select All', disabled: true }
+  ];
+}
+
+function macosViewMenuItems() {
+  return [
+    { label: 'as Icons', checked: true },
+    { label: 'as Buttons', disabled: true },
+    { label: 'as List', disabled: true }
+  ];
+}
+
+function macosSpecialMenuItems() {
+  return [
+    { label: 'Empty Trash' + '…', action: emptyTrashAlert },
+    { sep: true },
+    { label: 'Restart', disabled: true },
+    { label: 'Shut Down', action: shutdown }
+  ];
+}
+
+function macosHelpMenuItems() {
+  return [{ label: 'About this site' + '…', action: showAbout }];
 }
 
 // ---------------------------------------------------------------- actions
@@ -869,13 +1167,19 @@ function openItem(item) {
   if (item.type === 'folder') return openFolder(item);
   if (item.type === 'doc') return openDoc(item);
   if (item.type === 'switcher') return switchSkin();
-  if (item.type === 'trash' && SKIN === 'beos') {
-    return showAlert({
-      text: 'The Trash is empty.',
-      buttons: [{ label: 'OK', def: true }]
-    });
+  if (item.type === 'trash' && (SKIN === 'beos' || SKIN === 'macos')) {
+    return emptyTrashAlert();
   }
   return null;
+}
+
+// The "Trash is empty" alert: raised by double-clicking Trash (beos, macos)
+// and, on macos, by the Special menu's Empty Trash… too (see buildMenuBar).
+function emptyTrashAlert() {
+  return showAlert({
+    text: 'The ' + trashName() + ' is empty.',
+    buttons: [{ label: 'OK', def: true }]
+  });
 }
 
 // BeOS-style system alert: gray panel, darker icon stripe at the left,
@@ -901,7 +1205,7 @@ function showAlert(opts) {
   });
   var btns = el('div', 'alert-buttons', content);
   (opts.buttons || [{ label: 'OK', def: true }]).forEach(function (b) {
-    var btn = el('button', 'beos-button' + (b.def ? ' default-button' : ''), btns);
+    var btn = el('button', buttonClass() + (b.def ? ' default-button' : ''), btns);
     btn.textContent = b.label;
     btn.addEventListener('click', function () {
       node.remove();
@@ -916,9 +1220,9 @@ function showAlert(opts) {
   return win;
 }
 
-function switchSkin() {
-  var next = SKIN === 'beos' ? 'os2' : 'beos';
-  try { localStorage.setItem('skin', next); } catch (e) {}
+function switchSkin(target) {
+  if (!SKINS[target]) return;
+  try { localStorage.setItem('skin', target); } catch (e) {}
   location.href = location.pathname; // drop ?skin/?fixture overrides
 }
 
@@ -930,8 +1234,12 @@ function renderMobile() {
   var head = el('div', 'm-head', list);
   head.textContent = M.site.title;
   var sw = el('button', 'm-switch', head);
-  sw.textContent = 'Skin: ' + (SKIN === 'beos' ? 'BeOS' : 'OS/2 Warp');
-  sw.addEventListener('click', switchSkin);
+  sw.textContent = 'Skin: ' + SKINS[SKIN].displayName;
+  sw.addEventListener('click', function (e) {
+    e.stopPropagation();
+    var r = sw.getBoundingClientRect();
+    showMenu(switchItems(), r.left, r.bottom);
+  });
   function walk(items, depth, parent) {
     items.forEach(function (item) {
       if (item.type === 'switcher' || item.type === 'trash') return;
