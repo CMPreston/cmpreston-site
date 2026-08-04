@@ -891,6 +891,12 @@ FIXTURES.macos = {
       kind: 'doc', title: 'what the door does', x: -1, y: 19, w: 583, h: 427,
       content: macosEditorContent
     });
+    // Bitmap-text overlays (wave-4, OS/2 poem-text.png precedent): the title
+    // band and the poem text render 1:1 from the reference's own pixels; the
+    // CSS/DOM versions underneath stay for structure but the extracted glyphs
+    // win the diff. Production doc windows are iframes, untouched by this.
+    macosImg(desktop, 'title-editor-band', 0, 19, 21000);
+    macosImg(desktop, 'poemtext-04', 3, 43, 21000);
     macosImg(desktop, 'ibeam', 435, 234, 99999);
   },
 

@@ -685,6 +685,23 @@ def cut_macos(only=None):
     if want('macos/growbox'):
         crop('macos/02-folder.png', (407, 248, 423, 264), 'macos/growbox.png')
 
+    # ---- wave-4 integration crops ------------------------------------------
+    # 04-document's last 0.145pp over the bar was per-glyph text rasterization
+    # (Chromium Geneva vs the original Mac OS bitmap text), the same measured
+    # floor the BeOS font experiment documented. Per the OS/2 System Editor
+    # precedent (poem-text.png), the fixture overlays the reference's own
+    # bitmap text 1:1; production is unaffected (production doc windows host
+    # compiled poem pages in iframes, never this synthetic editor view).
+    # title-editor-band: the SimpleText window's full title band, borders and
+    # widget boxes included (window sits at x-1,y19 in the fixture; band cut
+    # from screen x0 so the off-screen 1px column stays off-screen).
+    if want('macos/title-editor-band'):
+        crop('macos/04-document.png', (0, 19, 583, 42), 'macos/title-editor-band.png')
+    # poemtext-04: the four poem lines + caret, tight bbox measured by black-
+    # pixel scan of the client area ((3,44)-(243,129) + 1px margin).
+    if want('macos/poemtext-04'):
+        crop('macos/04-document.png', (3, 43, 250, 131), 'macos/poemtext-04.png')
+
     # ---- production icons: clean, transparent, cut from the SAME genuine
     # Mac OS 8.6 art (Poems is a real folder, "what the door does" a real
     # document, Wastebasket the real trash, Macintosh HD the real boot disk)
