@@ -1,0 +1,16 @@
+# keep the build context small: operator media, extracted ROM, disk images,
+# vendored source (fetched fresh inside the Dockerfile), and scratch state
+# never need to be sent to the Docker daemon as build context.
+*.iso
+*.img
+*.rom
+*.dsk
+*.hda
+*.raw
+*.log
+*.ppm
+*.png
+src/
+qemu_work/
+__pycache__/
+.git/
