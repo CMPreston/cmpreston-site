@@ -622,6 +622,12 @@ FIXTURES.os2 = {
   }
 };
 
+// macos: stub skin, no fixtures yet (pixel-fidelity pass adds them later).
+// Kept empty rather than omitted so FIXTURES[SKIN] is still a real object and
+// ?skin=macos&fixture=anything degrades gracefully through the warn path
+// below instead of throwing on a missing key.
+FIXTURES.macos = {};
+
 var fn = FIXTURES[SKIN] && FIXTURES[SKIN][id];
 if (fn) fn(); else console.warn('unknown fixture', SKIN, id);
 })();
