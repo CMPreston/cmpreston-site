@@ -31,6 +31,7 @@ figure.poem-image img { display: block; max-width: 100%; height: auto; }
 .poem .rl { display: block; text-align: right; }
 .poem::after { content: ""; display: block; clear: both; }
 .poem:empty { min-height: 45vh; }
+figure.poem-image ~ .poem:empty { min-height: 0; }
 .credit { margin-top: 4rem; border-top: 1px solid #d8d4cc; padding-top: 1rem;
           font-size: .9rem; color: #6b675f; }
 .credit em { font-style: italic; }

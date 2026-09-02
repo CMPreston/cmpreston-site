@@ -16,7 +16,7 @@ window.MANIFEST = {
     "about_lines": [
       "cmpreston.com",
       "poems for the browser",
-      "Version 1.1",
+      "Version 1.2",
       "(c) C.M. Preston. All rights reserved."
     ]
   },
@@ -29,7 +29,11 @@ window.MANIFEST = {
         { "type": "doc", "name": "from the flood", "path": "poems/from-the-flood-meat-for-tea-2020.html" },
         { "type": "doc", "name": "stern promises", "path": "poems/stern-promises-meat-for-tea-2020.html" },
         { "type": "doc", "name": "My friends getting Botox", "path": "poems/my-friends-getting-botox-lucky-jefferson-2020.html" },
-        { "type": "doc", "name": "Untitled", "path": "poems/untitled-better-than-starbucks-2020.html" }
+        { "type": "doc", "name": "Untitled", "path": "poems/untitled-better-than-starbucks-2020.html" },
+        { "type": "doc", "name": "Our Love was a Hazardous Spill", "path": "poems/our-love-was-a-hazardous-spill-punt-volat-2020.html" },
+        { "type": "doc", "name": "Track Changes #5", "path": "poems/track-changes-5-just-dream-pop-press-2020.html" },
+        { "type": "doc", "name": "Track Changes #6", "path": "poems/track-changes-6-i-have-felt-this-way-for-a-while-dream-pop-press-2020.html" },
+        { "type": "doc", "name": "Track Changes #6 (reprise)", "path": "poems/track-changes-6-reprise-i-have-felt-this-way-for-a-while-dream-pop-press-2020.html" }
       ]
     },
     {
