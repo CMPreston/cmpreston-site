@@ -5,16 +5,23 @@ Source of truth is ~/dev/cmpreston/dist/ (read-only; built by that repo's
 build.sh). Run this after rebuilding poems there, then add any new files to
 js/manifest.js by hand. Python stdlib only.
 
+Skipped: dist's own index.html and the demo-*.html tool demos (scaffolding,
+not C.M. Preston works; removed from the site 2026-09-02). Also carried
+across: dist/images/ (photographs for plain poems) into poems/images/, so a
+compiled page's relative src keeps working.
+
 Each copied page gets a robots "noarchive" directive injected (merged into an
 existing robots meta if the compiler emitted one). Site policy: searchable,
 never archived; the source pages in the compiler repo stay untouched.
 """
+import os
 import pathlib
 import re
 import shutil
 import sys
 
-SRC = pathlib.Path.home() / 'dev' / 'cmpreston' / 'dist'
+SRC = pathlib.Path(os.environ.get('CMP_DIST') or
+                   pathlib.Path.home() / 'dev' / 'cmpreston' / 'dist')
 DST = pathlib.Path(__file__).resolve().parent.parent / 'poems'
 
 ROBOTS_META = re.compile(r'(<meta\s+name="robots"\s+content=")([^"]*)(")', re.I)
@@ -39,11 +46,18 @@ def main():
     DST.mkdir(exist_ok=True)
     copied = []
     for f in sorted(SRC.glob('*.html')):
-        if f.name == 'index.html':   # dist's own demo index, not a poem
-            continue
+        if f.name == 'index.html' or f.name.startswith('demo-'):
+            continue                 # dist's demo index and tool demos
         shutil.copy2(f, DST / f.name)
         ensure_noarchive(DST / f.name)
         copied.append(f.name)
+    images = SRC / 'images'
+    if images.is_dir():
+        (DST / 'images').mkdir(exist_ok=True)
+        for f in sorted(images.iterdir()):
+            if f.is_file():
+                shutil.copy2(f, DST / 'images' / f.name)
+                copied.append('images/' + f.name)
     print(f'copied {len(copied)} poem page(s) from {SRC} (noarchive injected):')
     for name in copied:
         print(' ', name)
