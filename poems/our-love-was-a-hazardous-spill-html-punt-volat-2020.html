@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, noarchive">
+<title>Our Love was a Hazardous Spill</title>
+<style>
+
+:root { --poem-font: Georgia, 'Times New Roman', serif; }
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: #e8e6e3; color: #1a1a1a;
+       font-family: var(--poem-font); line-height: 1.6; }
+.tc-toolbar { position: sticky; top: 0; z-index: 5; background: #f3f2f1;
+  border-bottom: 1px solid #c8c6c4; padding: .45rem .9rem;
+  font: 13px -apple-system, 'Segoe UI', Roboto, sans-serif; }
+.tc-toolbar span { color: #605e5c; margin-right: .8rem; }
+.tc-toolbar button { font: inherit; background: #fff;
+  border: 1px solid #c8c6c4; border-radius: 2px; padding: .2rem .7rem;
+  margin-right: .35rem; cursor: pointer; }
+.tc-toolbar button[aria-pressed="true"] { background: #deecf9;
+  border-color: #2b579a; color: #2b579a; }
+.tc-layout { display: flex; justify-content: center; align-items: flex-start;
+  padding: 2.2rem .8rem 5rem; }
+.page { background: #fff; width: 100%; max-width: 816px; min-height: 700px;
+  box-shadow: 0 1px 8px rgba(0,0,0,.28); padding: 86px 90px;
+  position: relative; }
+.rail { width: 280px; flex: 0 0 280px; margin-left: 26px; position: relative; }
+h1.poem-title { font-size: 1.5rem; font-weight: normal; margin: 0 0 2.2rem; }
+.poem { font-size: 1.05rem; }
+.line { display: block; white-space: pre-wrap; min-height: 1.6em;
+        position: relative; }
+.line.changed::before { content: ""; position: absolute; left: -48px;
+  top: .18em; bottom: .18em; border-left: 2px solid #b5082e; }
+del { color: #b5082e; text-decoration: line-through; }
+ins { color: #b5082e; text-decoration: underline; }
+.cmt-anchor { background: rgba(181,8,46,.10);
+  border-bottom: 1px solid rgba(181,8,46,.55); }
+.cmt-anchor.lit, .balloon.lit { background: rgba(181,8,46,.22); }
+sup.cmt-mark { line-height: 0; display: none; }
+sup.cmt-mark button { font: 600 .68em -apple-system, 'Segoe UI', sans-serif;
+  color: #b5082e; background: none; border: none; cursor: pointer;
+  padding: 0 .1em; }
+.balloon { position: absolute; left: 0; right: 0; background: #fdf3f5;
+  border: 1px solid #e5b6c0; border-left: 3px solid #b5082e;
+  border-radius: 2px; padding: .45rem .6rem .5rem;
+  font: 13px -apple-system, 'Segoe UI', Roboto, sans-serif;
+  line-height: 1.45; }
+.tc-layout { position: relative; }
+svg.connectors { position: absolute; left: 0; top: 0; width: 100%; height: 100%; z-index: 3;
+  pointer-events: none; overflow: visible; }
+svg.connectors polyline { fill: none; stroke: #b5082e; stroke-width: 1;
+  stroke-dasharray: 2 3; }
+svg.connectors polyline.lit { stroke-width: 1.5; stroke-dasharray: none; }
+.balloon .who { font-weight: 600; color: #b5082e; display: block;
+  margin-bottom: .15rem; }
+.balloon.deleted .who { display: inline; margin-right: .3em; }
+.balloon.deleted .pilcrow { color: #9a9a9a; }
+h2.poem-subtitle { font-size: 1.05rem; font-weight: normal; margin: -1.8rem 0 2.2rem;
+  color: #3a3a3a; }
+/* ---- balloon mode: deletions live in the rail ---------------------- */
+.del-anchor { display: inline-block; width: 0; height: 1em; vertical-align: -.15em;
+  border-left: 2px dotted #b5082e; }
+del.bd { display: none; }
+body.tc-original del.bd { display: inline; }
+/* ---- view modes ------------------------------------------------------ */
+body.tc-final del, body.tc-final .balloon, body.tc-final sup.cmt-mark,
+body.tc-final svg.connectors, body.tc-original svg.connectors
+  { display: none; }
+body.tc-final ins { color: inherit; text-decoration: none; }
+body.tc-final .line.changed::before { display: none; }
+body.tc-final .cmt-anchor { background: none; border-bottom: none; }
+body.tc-original ins, body.tc-original .balloon,
+body.tc-original sup.cmt-mark { display: none; }
+body.tc-original del { color: inherit; text-decoration: none; }
+body.tc-original .line.changed::before { display: none; }
+body.tc-original .cmt-anchor { background: none; border-bottom: none; }
+body.tc-final .del-anchor, body.tc-original .del-anchor { display: none; }
+/* ---- narrow screens --------------------------------------------------- */
+@media (max-width: 980px) {
+  .rail { display: none; }
+  svg.connectors { display: none; }
+  .page { padding: 56px 26px 56px 40px; }
+  .line.changed::before { left: -22px; }
+  body.tc-markup sup.cmt-mark { display: inline; }
+  .balloon.inline { position: static; display: block; margin: .5rem 0;
+    max-width: 34rem; }
+  .balloon.inline::before { display: none; }
+  body.tc-final .balloon.inline, body.tc-original .balloon.inline
+    { display: none; }
+}
+@media print { .tc-toolbar { display: none; } }
+
+</style>
+</head>
+<body class="tc-markup">
+
+<div class="tc-toolbar">
+  <span>Review</span>
+  <button type="button" data-mode="markup" aria-pressed="true">All Markup</button>
+  <button type="button" data-mode="final" aria-pressed="false">No Markup</button>
+  <button type="button" data-mode="original" aria-pressed="false">Original</button>
+</div>
+<div class="tc-layout">
+  <svg class="connectors" aria-hidden="true"></svg>
+  <div class="page">
+    <h1 class="poem-title"><span class="del-anchor" id="delref-1" data-del="1"></span><sup class="cmt-mark"><button type="button" data-target="del-1">[D1]</button></sup><del class="bd">Code</del> O<ins>ur</ins><span class="del-anchor" id="delref-2" data-del="2"></span><sup class="cmt-mark"><button type="button" data-target="del-2">[D2]</button></sup><del class="bd">ange:</del> <ins>Love was a</ins> Hazardous Spill</h1>
+    <h2 class="poem-subtitle">by <span class="del-anchor" id="delref-3" data-del="3"></span><sup class="cmt-mark"><button type="button" data-target="del-3">[D3]</button></sup><del class="bd">Ian Williams</del><ins>C.M. Preston</ins></h2>
+    <div class="poem"><span class="line changed">A baby. The pressure. The press<ins>ure</ins> started<span class="del-anchor" id="delref-4" data-del="4"></span><sup class="cmt-mark"><button type="button" data-target="del-4">[D4]</button></sup><del class="bd">shooting</del></span>
+<span class="line changed">immediately. In case. In <span class="del-anchor" id="delref-5" data-del="5"></span><sup class="cmt-mark"><button type="button" data-target="del-5">[D5]</button></sup><del class="bd">this one</del><ins>case</ins> you can<ins>’t.</ins><span class="del-anchor" id="delref-6" data-del="6"></span><sup class="cmt-mark"><button type="button" data-target="del-6">[D6]</button></sup><del class="bd">still see</del></span>
+<span class="line changed"><ins>S</ins><span class="del-anchor" id="delref-7" data-del="7"></span><sup class="cmt-mark"><button type="button" data-target="del-7">[D7]</button></sup><del class="bd">s</del>ome blood <span class="del-anchor" id="delref-8" data-del="8"></span><sup class="cmt-mark"><button type="button" data-target="del-8">[D8]</button></sup><del class="bd">on the li’l thing’s face</del><span class="del-anchor" id="delref-9" data-del="9"></span><sup class="cmt-mark"><button type="button" data-target="del-9">[D9]</button></sup><del class="bd">. H</del><ins>here and there never hurt anyone;</ins></span>
+<span class="line changed"><ins>Said</ins> <span class="del-anchor" id="delref-10" data-del="10"></span><sup class="cmt-mark"><button type="button" data-target="del-10">[D10]</button></sup><del class="bd">’s one</del>before they cleaned the <ins>blood up</ins><span class="del-anchor" id="delref-11" data-del="11"></span><sup class="cmt-mark"><button type="button" data-target="del-11">[D11]</button></sup><del class="bd">vernix</del>,</span>
+<span class="line changed"><span class="del-anchor" id="delref-12" data-del="12"></span><sup class="cmt-mark"><button type="button" data-target="del-12">[D12]</button></sup><del class="bd">his hair slick</del> with a<span class="del-anchor" id="delref-13" data-del="13"></span><sup class="cmt-mark"><button type="button" data-target="del-13">[D13]</button></sup><del class="bd">m</del>ni<ins>mosity</ins><span class="del-anchor" id="delref-14" data-del="14"></span><sup class="cmt-mark"><button type="button" data-target="del-14">[D14]</button></sup><del class="bd">otic</del><span class="del-anchor" id="delref-15" data-del="15"></span><sup class="cmt-mark"><button type="button" data-target="del-15">[D15]</button></sup><del class="bd">oil</del>, styled <ins>as caring</ins><span class="del-anchor" id="delref-16" data-del="16"></span><sup class="cmt-mark"><button type="button" data-target="del-16">[D16]</button></sup><del class="bd">like a duck</del></span>
+<span class="line changed">after <ins>our</ins><span class="del-anchor" id="delref-17" data-del="17"></span><sup class="cmt-mark"><button type="button" data-target="del-17">[D17]</button></sup><del class="bd">an oil</del> spill.</span>
+<span class="line"></span>
+<span class="line changed">                Yeah, <ins>you all</ins> <span class="del-anchor" id="delref-18" data-del="18"></span><sup class="cmt-mark"><button type="button" data-target="del-18">[D18]</button></sup><del class="bd">paparazzi</del>up in our faces,</span>
+<span class="line changed"><ins>parents</ins> <span class="del-anchor" id="delref-19" data-del="19"></span><sup class="cmt-mark"><button type="button" data-target="del-19">[D19]</button></sup><del class="bd">neighbours</del>blathering - <em>grandmother’s</em> <ins><em>disappointed</em></ins><span class="del-anchor" id="delref-20" data-del="20"></span><sup class="cmt-mark"><button type="button" data-target="del-20">[D20]</button></sup><del class="bd"><em>a heifer</em></del>,</span>
+<span class="line changed"><ins><em>your</em></ins> <em>girl’s</em> <ins><em>ready now</em></ins><span class="del-anchor" id="delref-21" data-del="21"></span><sup class="cmt-mark"><button type="button" data-target="del-21">[D21]</button></sup><del class="bd"><em>a hussy</em></del>, <em>a boy</em> <ins><em>would be great, but any</em></ins><span class="del-anchor" id="delref-22" data-del="22"></span><sup class="cmt-mark"><button type="button" data-target="del-22">[D22]</button></sup><del class="bd"><em>’s a gangsta,</em></del> <em>baby’s a</em> <ins><em>dream.</em></ins><span class="del-anchor" id="delref-23" data-del="23"></span><sup class="cmt-mark"><button type="button" data-target="del-23">[D23]</button></sup><del class="bd"><em>stat</em></del></span>
+<span class="line changed"><ins>An offer to help, but only</ins> <span class="del-anchor" id="delref-24" data-del="24"></span><sup class="cmt-mark"><button type="button" data-target="del-24">[D24]</button></sup><del class="bd">-</del>while the poor child’s napping. That<ins>’s</ins><span class="del-anchor" id="delref-25" data-del="25"></span><sup class="cmt-mark"><button type="button" data-target="del-25">[D25]</button></sup><del class="bd">you got?</del> all <ins>they can do.</ins><span class="del-anchor" id="delref-26" data-del="26"></span><sup class="cmt-mark"><button type="button" data-target="del-26">[D26]</button></sup><del class="bd">on and off</del></span>
+<span class="line changed">I get sixteen years <span class="del-anchor" id="delref-27" data-del="27"></span><sup class="cmt-mark"><button type="button" data-target="del-27">[D27]</button></sup><del class="bd">him</del>with <ins>the kid</ins><span class="del-anchor" id="delref-28" data-del="28"></span><sup class="cmt-mark"><button type="button" data-target="del-28">[D28]</button></sup><del class="bd">before someone else gets him</del></span>
+<span class="line changed"><ins>but do you want to get them on convenient weekends?</ins> By <span class="del-anchor" id="delref-29" data-del="29"></span><sup class="cmt-mark"><button type="button" data-target="del-29">[D29]</button></sup><del class="bd">.</del><em>gets</em> <ins><em>them</em></ins><span class="del-anchor" id="delref-30" data-del="30"></span><sup class="cmt-mark"><button type="button" data-target="del-30">[D30]</button></sup><del class="bd"><em>him</em></del></span>
+<span class="line changed">you know what I mean. <ins>Only the</ins><span class="del-anchor" id="delref-31" data-del="31"></span><sup class="cmt-mark"><button type="button" data-target="del-31">[D31]</button></sup><del class="bd">Here’s a</del> good <ins>times.</ins><span class="del-anchor" id="delref-32" data-del="32"></span><sup class="cmt-mark"><button type="button" data-target="del-32">[D32]</button></sup><del class="bd">one</del></span>
+<span class="line changed"><ins>None of the spill,</ins><span class="del-anchor" id="delref-33" data-del="33"></span><sup class="cmt-mark"><button type="button" data-target="del-33">[D33]</button></sup><del class="bd">of his birthmark and this might save you<br>time - his profile.</del></span>
+<span class="line changed"><ins>all of the milk.</ins></span></div>
+  </div>
+  <div class="rail">
+<aside class="balloon deleted" id="del-1" data-ref="delref-1" style="top:0"><span class="who">Deleted:</span>Code</aside>
+<aside class="balloon deleted" id="del-2" data-ref="delref-2" style="top:0"><span class="who">Deleted:</span>ange:</aside>
+<aside class="balloon deleted" id="del-3" data-ref="delref-3" style="top:0"><span class="who">Deleted:</span>Ian Williams</aside>
+<aside class="balloon deleted" id="del-4" data-ref="delref-4" style="top:0"><span class="who">Deleted:</span>shooting</aside>
+<aside class="balloon deleted" id="del-5" data-ref="delref-5" style="top:0"><span class="who">Deleted:</span>this one</aside>
+<aside class="balloon deleted" id="del-6" data-ref="delref-6" style="top:0"><span class="who">Deleted:</span>still see</aside>
+<aside class="balloon deleted" id="del-7" data-ref="delref-7" style="top:0"><span class="who">Deleted:</span>s</aside>
+<aside class="balloon deleted" id="del-8" data-ref="delref-8" style="top:0"><span class="who">Deleted:</span>on the li’l thing’s face</aside>
+<aside class="balloon deleted" id="del-9" data-ref="delref-9" style="top:0"><span class="who">Deleted:</span>. H</aside>
+<aside class="balloon deleted" id="del-10" data-ref="delref-10" style="top:0"><span class="who">Deleted:</span>’s one</aside>
+<aside class="balloon deleted" id="del-11" data-ref="delref-11" style="top:0"><span class="who">Deleted:</span>vernix</aside>
+<aside class="balloon deleted" id="del-12" data-ref="delref-12" style="top:0"><span class="who">Deleted:</span>his hair slick</aside>
+<aside class="balloon deleted" id="del-13" data-ref="delref-13" style="top:0"><span class="who">Deleted:</span>m</aside>
+<aside class="balloon deleted" id="del-14" data-ref="delref-14" style="top:0"><span class="who">Deleted:</span>otic</aside>
+<aside class="balloon deleted" id="del-15" data-ref="delref-15" style="top:0"><span class="who">Deleted:</span>oil</aside>
+<aside class="balloon deleted" id="del-16" data-ref="delref-16" style="top:0"><span class="who">Deleted:</span>like a duck</aside>
+<aside class="balloon deleted" id="del-17" data-ref="delref-17" style="top:0"><span class="who">Deleted:</span>an oil</aside>
+<aside class="balloon deleted" id="del-18" data-ref="delref-18" style="top:0"><span class="who">Deleted:</span>paparazzi</aside>
+<aside class="balloon deleted" id="del-19" data-ref="delref-19" style="top:0"><span class="who">Deleted:</span>neighbours</aside>
+<aside class="balloon deleted" id="del-20" data-ref="delref-20" style="top:0"><span class="who">Deleted:</span><em>a heifer</em></aside>
+<aside class="balloon deleted" id="del-21" data-ref="delref-21" style="top:0"><span class="who">Deleted:</span><em>a hussy</em></aside>
+<aside class="balloon deleted" id="del-22" data-ref="delref-22" style="top:0"><span class="who">Deleted:</span><em>’s a gangsta,</em></aside>
+<aside class="balloon deleted" id="del-23" data-ref="delref-23" style="top:0"><span class="who">Deleted:</span><em>stat</em></aside>
+<aside class="balloon deleted" id="del-24" data-ref="delref-24" style="top:0"><span class="who">Deleted:</span>-</aside>
+<aside class="balloon deleted" id="del-25" data-ref="delref-25" style="top:0"><span class="who">Deleted:</span>you got?</aside>
+<aside class="balloon deleted" id="del-26" data-ref="delref-26" style="top:0"><span class="who">Deleted:</span>on and off</aside>
+<aside class="balloon deleted" id="del-27" data-ref="delref-27" style="top:0"><span class="who">Deleted:</span>him</aside>
+<aside class="balloon deleted" id="del-28" data-ref="delref-28" style="top:0"><span class="who">Deleted:</span>before someone else gets him</aside>
+<aside class="balloon deleted" id="del-29" data-ref="delref-29" style="top:0"><span class="who">Deleted:</span>.</aside>
+<aside class="balloon deleted" id="del-30" data-ref="delref-30" style="top:0"><span class="who">Deleted:</span><em>him</em></aside>
+<aside class="balloon deleted" id="del-31" data-ref="delref-31" style="top:0"><span class="who">Deleted:</span>Here’s a</aside>
+<aside class="balloon deleted" id="del-32" data-ref="delref-32" style="top:0"><span class="who">Deleted:</span>one</aside>
+<aside class="balloon deleted" id="del-33" data-ref="delref-33" style="top:0"><span class="who">Deleted:</span>of his birthmark and this might save you<span class="pilcrow">&para;</span><br>time - his profile.<span class="pilcrow">&para;</span></aside>
+  </div>
+</div>
+<script>
+
+(function () {
+  var modes = { markup: 'tc-markup', final: 'tc-final', original: 'tc-original' };
+  document.querySelectorAll('.tc-toolbar button[data-mode]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      document.body.className = modes[b.getAttribute('data-mode')];
+      document.querySelectorAll('.tc-toolbar button[data-mode]').forEach(function (x) {
+        x.setAttribute('aria-pressed', x === b ? 'true' : 'false');
+      });
+      layout();
+    });
+  });
+
+  var rail = document.querySelector('.rail');
+  var page = document.querySelector('.page');
+  var wrap = document.querySelector('.tc-layout');
+  var svg = document.querySelector('svg.connectors');
+  var NS = 'http://www.w3.org/2000/svg';
+
+  function narrow() { return window.matchMedia('(max-width: 980px)').matches; }
+
+  function layout() {
+    if (!rail) return;
+    if (narrow()) return;   // rail hidden; inline mode handles itself
+    var bottom = 0;
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    var W = wrap.getBoundingClientRect();
+    var PG = page.getBoundingClientRect();
+    document.querySelectorAll('.balloon').forEach(function (bl) {
+      if (bl.classList.contains('inline')) {   // bring back from inline mode
+        bl.classList.remove('inline', 'open');
+        rail.appendChild(bl);
+      }
+      var a = document.getElementById(bl.getAttribute('data-ref'));
+      if (!a) return;
+      var top = a.getBoundingClientRect().top
+              - page.getBoundingClientRect().top;
+      if (top < bottom) top = bottom;
+      bl.style.top = top + 'px';
+      bottom = top + bl.offsetHeight + 12;
+      /* connector: anchor -> page right edge (same height) -> balloon */
+      var A = a.getBoundingClientRect();
+      var B = bl.getBoundingClientRect();
+      var ax = A.right - W.left, ay = A.bottom - W.top - 2;
+      var ex = PG.right - W.left - 8;
+      var bx = B.left - W.left, by = B.top - W.top + 12;
+      var pl = document.createElementNS(NS, 'polyline');
+      pl.setAttribute('points', ax + ',' + ay + ' ' + ex + ',' + ay + ' ' + bx + ',' + by);
+      pl.setAttribute('data-for', bl.id);
+      svg.appendChild(pl);
+    });
+  }
+
+  function litLine(bl, on) {
+    var pl = svg.querySelector('polyline[data-for="' + bl.id + '"]');
+    if (pl) pl.classList.toggle('lit', on);
+  }
+
+  /* hover pairing */
+  function pair(sel, getOther) {
+    document.querySelectorAll(sel).forEach(function (el) {
+      el.addEventListener('mouseenter', function () {
+        var o = getOther(el); if (o) { o.classList.add('lit'); el.classList.add('lit'); }
+        litLine(el.classList.contains('balloon') ? el : o, true);
+      });
+      el.addEventListener('mouseleave', function () {
+        var o = getOther(el); if (o) { o.classList.remove('lit'); }
+        el.classList.remove('lit');
+        litLine(el.classList.contains('balloon') ? el : o, false);
+      });
+    });
+  }
+  pair('.balloon', function (bl) {
+    return document.getElementById(bl.getAttribute('data-ref'));
+  });
+  pair('.del-anchor', function (a) {
+    return document.getElementById('del-' + a.getAttribute('data-del'));
+  });
+  pair('.cmt-anchor', function (a) {
+    return document.getElementById('cmt-' + a.getAttribute('data-cmt'));
+  });
+
+  /* narrow screens: tap [C1] to fold the balloon in under the line */
+  document.querySelectorAll('sup.cmt-mark button').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var bl = document.getElementById(b.getAttribute('data-target'));
+      var line = b.closest('.line');
+      if (!bl || !line) return;
+      if (bl.classList.contains('open')) {
+        bl.classList.remove('inline', 'open');
+        rail.appendChild(bl);
+      } else {
+        bl.classList.add('inline', 'open');
+        line.insertAdjacentElement('afterend', bl);
+      }
+    });
+  });
+
+  window.addEventListener('resize', layout);
+  window.addEventListener('load', layout);
+  layout();
+})();
+
+</script>
+</body>
+</html>
