@@ -7,8 +7,9 @@ js/manifest.js by hand. Python stdlib only.
 
 Skipped: dist's own index.html and the demo-*.html tool demos (scaffolding,
 not C.M. Preston works; removed from the site 2026-09-02). Also carried
-across: dist/images/ (photographs for plain poems) into poems/images/, so a
-compiled page's relative src keeps working.
+across: dist/images/ (photographs for plain poems) into poems/images/ and
+dist/fonts/ (embedded typefaces and their license notes) into poems/fonts/,
+so a compiled page's relative src and its @font-face url keep working.
 
 Each copied page gets a robots "noarchive" directive injected (merged into an
 existing robots meta if the compiler emitted one). Site policy: searchable,
@@ -58,6 +59,13 @@ def main():
             if f.is_file():
                 shutil.copy2(f, DST / 'images' / f.name)
                 copied.append('images/' + f.name)
+    fonts = SRC / 'fonts'
+    if fonts.is_dir():
+        (DST / 'fonts').mkdir(exist_ok=True)
+        for f in sorted(fonts.iterdir()):
+            if f.is_file():
+                shutil.copy2(f, DST / 'fonts' / f.name)
+                copied.append('fonts/' + f.name)
     print(f'copied {len(copied)} poem page(s) from {SRC} (noarchive injected):')
     for name in copied:
         print(' ', name)
