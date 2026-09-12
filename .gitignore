@@ -39,3 +39,6 @@ verify/macos_rig/qemu_work/
 verify/macos_rig/.sheepshaver_nvram
 verify/macos_rig/core
 verify/macos_rig/core.*
+
+# python bytecode, anywhere
+__pycache__/
