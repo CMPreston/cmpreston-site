@@ -1,16 +1,15 @@
 // The one hand-maintained content file. Edit this when adding poems.
 // A folder entry: { type:'folder', name, icon, children:[...] }
 // A document entry: { type:'doc', name, path } — path points at a compiled
-// poem page copied into poems/ by tools/sync_poems.py (source of truth:
-// ../cmpreston/dist/, never edited here).
+// poem page copied into docs/poems/ by tools/sync_poems.py (source of truth:
+// the poem compiler's dist/ folder, never edited here).
 // Special types: 'switcher' (skin toggle control), 'trash' (decorative).
 //
 // Content as of 2026-09-06: the published record, one Poems folder.
-// Sources are the frozen as-published snapshots,
-// one per acceptance. The four tracked-changes
-// pieces are the HTML re-renders (trackchanges tool, balloon markup), chosen
-// 2026-09-06 over the journal page images; the image snapshots stay
-// with the source record.
+// Sources are the frozen as-published snapshots, one per acceptance. The
+// four tracked-changes pieces are the HTML re-renders (trackchanges tool,
+// balloon markup), chosen 2026-09-06 over the journal page images; the
+// image snapshots stay with the source record.
 window.MANIFEST = {
   "site": {
     "title": "C.M. Preston",

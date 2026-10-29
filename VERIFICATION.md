@@ -110,7 +110,7 @@ divergence. Consequences, all taken transparently:
 2. The About replica remains in the suite as a supplementary,
    non-passing state (`?fixture=about-replica`), reported with the table
    above rather than hidden.
-3. The extracted Swis721 fonts live in `fonts/extracted/` (gitignored,
+3. The extracted Swis721 fonts live in `docs/fonts/extracted/` (gitignored,
    never committed, never deployed) purely as measurement apparatus; the
    experiment moots any question of shipping them — they don't help.
 
@@ -252,7 +252,7 @@ Content-parity notes specific to this skin, all deliberate:
 
 ## What the fixtures stage (content-parity honesty)
 
-Each fixture (`js/fixtures.js`, active only with `?fixture=`) rebuilds the
+Each fixture (`docs/js/fixtures.js`, active only with `?fixture=`) rebuilds the
 desktop so its **content** — icon names, positions, window titles, text
 strings, clock readings — mirrors the reference exactly; the **chrome**
 rendering it is drawn with is the same CSS/JS the production site uses.
@@ -279,25 +279,13 @@ Asset provenance in README.md).
   extracted from the BeOS volume stays gitignored — it measured *worse*
   than the substitute (see the font-floor experiment) and is not shipped.
 
-## Deploy & gated actions
+## Deploy
 
-Live repo: **github.com/CMPreston/cmpreston-site** (public), pushed as the
-CMPreston account. GitHub Pages builds from `main` / root;
-custom domain `cmpreston.com` set via the committed `CNAME`; `.nojekyll`
-disables Jekyll for this plain static site.
+Live repo: **github.com/CMPreston/cmpreston-site** (public). GitHub Pages
+(legacy build) serves only `docs/` on `main`: `docs/.nojekyll` disables
+Jekyll for this plain static site and `docs/CNAME` carries the custom
+domain `cmpreston.com`. Nothing outside `docs/` (this file, `README.md`,
+`verify/`, `reference/`, `tools/`) is served on the site. Preview locally
+with `python3 -m http.server` run in `docs/`.
 
-Done: repo created, both skins pushed, Pages built green on every push.
-
-Still open at the time:
-
-1. **DNS** — point `cmpreston.com` at GitHub Pages at the registrar:
-   four A records (`@` → 185.199.108.153 / .109.153 / .110.153 / .111.153)
-   and, optionally, four AAAA records (`@` → 2606:50c0:8000::153 …8003::153)
-   plus a `www` CNAME → `CMPreston.github.io`. (IPs verified against
-   GitHub's official Pages docs, not quoted from memory.) Until these
-   resolve, the `github.io` URL 301-redirects to the not-yet-live domain;
-   preview locally with `python3 -m http.server`.
-2. **Enforce HTTPS** — after DNS resolves and GitHub provisions the TLS
-   cert, flip on "Enforce HTTPS" (Pages settings, or the API).
-3. **Asset shipping** — the extracted BeOS/OS-2 icon art and the OS/2 WARP
-   backdrop ship as-is by explicit operator decision; no further gate.
+The extracted BeOS/OS-2 icon art and the OS/2 WARP backdrop ship as-is.

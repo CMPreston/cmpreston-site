@@ -22,7 +22,7 @@ os.chdir(WORK)
 TAG = sys.argv[2]
 EXTRA = sys.argv[3:]
 SOCK = f'mon-{TAG}.sock'
-QEMU = 'qemu-system-i386'
+QEMU = 'qemu-system-i386'   # from PATH
 
 def hmp(cmd, delay=0.3):
     s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)

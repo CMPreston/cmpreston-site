@@ -20,13 +20,14 @@ CLI (from w4rig/):
   mouse.py dblclick GX GY
   mouse.py rclick GX GY        right button (context menu)
 """
+import os
 import subprocess
 import sys
 import time
 
 from PIL import Image
 
-WORK = 'w4rig'
+WORK = os.environ.get('W4RIG') or os.getcwd()   # host w4rig/ (bind-mounted at /work)
 # guest render offset inside the 86Box window. With HiDPI scaling DISABLED the
 # render is crisp 1:1 and the 640x480 guest starts at frame (0,52) and spans to
 # (640,532). (Menu ~22 + toolbar ~30 = 52; status bar below y=532.) Full-frame

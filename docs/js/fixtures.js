@@ -23,7 +23,7 @@ document.documentElement.classList.add('fixture');
 
 // Font experiments (verify/font_experiment.py): ?authfont=swiss|swissaa|tgh
 // swiss   — authentic Swis721 BT extracted from the BeOS volume (local only,
-//           fonts/extracted/ is never committed or deployed)
+//           docs/fonts/extracted/ is never committed or deployed)
 // swissaa — same, with grayscale antialiasing like BeOS's renderer
 // tgh     — TeX Gyre Heros, the libre substitute staged for shipping
 var AF = q.get('authfont');

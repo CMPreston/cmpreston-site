@@ -30,7 +30,7 @@ def main():
     port = s.getsockname()[1]; s.close()
     server = subprocess.Popen(
         [sys.executable, '-m', 'http.server', str(port), '--bind', '127.0.0.1'],
-        cwd=ROOT, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        cwd=ROOT / 'docs', stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     time.sleep(0.6)
     results = []
     try:

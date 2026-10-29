@@ -16,7 +16,7 @@ from PIL import Image
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 RAW = ROOT / 'reference' / 'raw'
 REF = ROOT / 'reference'          # 640x480 Warp-4 crops live here (reference/os2/*)
-OUT = ROOT / 'icons'
+OUT = ROOT / 'docs' / 'icons'
 
 # (source-relative, crop box (l,t,r,b), output-relative, make transparent bg?)
 # BeOS crops still read from reference/raw/ (RAW); the OS/2 Warp-4 sprites are

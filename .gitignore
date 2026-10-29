@@ -9,7 +9,7 @@ diffs/
 .DS_Store
 
 # commercial font binaries extracted from BeOS volume — never commit
-fonts/extracted/
+docs/fonts/extracted/
 
 # OS/2 rig binaries (operator media + vendor firmware — never commit)
 verify/os2_rig/*.img

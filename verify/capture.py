@@ -3,9 +3,9 @@
 
 Each build screenshot is taken at exactly the pixel dimensions of its
 reference image (reference/<skin>/<state>.png), so the diff is 1:1.
-Run with verify/.venv/bin/python3. Serves the repo over a local
-http.server (fetch-free shell also works from file://, but http keeps
-iframe scripting same-origin for the custom scrollbars).
+Run with verify/.venv/bin/python3. Serves docs/ (the published site
+root) over a local http.server (fetch-free shell also works from file://,
+but http keeps iframe scripting same-origin for the custom scrollbars).
 """
 import json
 import pathlib
@@ -32,7 +32,7 @@ def main(only=None):
     port = free_port()
     server = subprocess.Popen(
         [sys.executable, '-m', 'http.server', str(port), '--bind', '127.0.0.1'],
-        cwd=ROOT, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        cwd=ROOT / 'docs', stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     time.sleep(0.6)
     taken, missing = [], []
     try:

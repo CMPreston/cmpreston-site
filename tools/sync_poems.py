@@ -1,15 +1,17 @@
 #!/usr/bin/env python3
-"""Copy compiled poem pages from the cmpreston repo into poems/.
+"""Copy compiled poem pages from the cmpreston repo into docs/poems/.
 
-Source of truth is ../cmpreston/dist/ (read-only; built by that repo's
-build.sh). Run this after rebuilding poems there, then add any new files to
-js/manifest.js by hand. Python stdlib only.
+Source of truth is the cmpreston repo's dist/ (read-only; built by that
+repo's build.sh), checked out beside this repo as ../cmpreston, or wherever
+CMP_DIST points. Run this after rebuilding poems there, then add any new
+files to docs/js/manifest.js by hand. Python stdlib only.
 
 Skipped: dist's own index.html and the demo-*.html tool demos (scaffolding,
 not C.M. Preston works; removed from the site 2026-09-02). Also carried
-across: dist/images/ (photographs for plain poems) into poems/images/ and
-dist/fonts/ (embedded typefaces and their license notes) into poems/fonts/,
-so a compiled page's relative src and its @font-face url keep working.
+across: dist/images/ (photographs for plain poems) into docs/poems/images/
+and dist/fonts/ (embedded typefaces and their license notes) into
+docs/poems/fonts/, so a compiled page's relative src and its @font-face url
+keep working.
 
 Each copied page gets a robots "noarchive" directive injected (merged into an
 existing robots meta if the compiler emitted one). Site policy: searchable,
@@ -21,9 +23,10 @@ import re
 import shutil
 import sys
 
+ROOT = pathlib.Path(__file__).resolve().parent.parent
 SRC = pathlib.Path(os.environ.get('CMP_DIST') or
-                   pathlib.Path(__file__).resolve().parent.parent.parent / 'cmpreston' / 'dist')
-DST = pathlib.Path(__file__).resolve().parent.parent / 'poems'
+                   ROOT.parent / 'cmpreston' / 'dist')
+DST = ROOT / 'docs' / 'poems'
 
 ROBOTS_META = re.compile(r'(<meta\s+name="robots"\s+content=")([^"]*)(")', re.I)
 
